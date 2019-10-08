@@ -6,7 +6,6 @@ module.exports = {
     'node': true,
   },
   'extends': [
-    'react-app',
     'airbnb',
   ],
   'parser': 'babel-eslint',
@@ -18,6 +17,9 @@ module.exports = {
   'rules': {
     'no-underscore-dangle': ['error', { 'allow': ['__REDUX_DEVTOOLS_EXTENSION_COMPOSE__'] }],
     'import/order': ['off'], // Relative imports can precede absolute ones in components
+    'arrow-parens': 0,
+    'import/first': 0,
+    'no-console': 0,
   },
   'settings': {
     'import/resolver': {

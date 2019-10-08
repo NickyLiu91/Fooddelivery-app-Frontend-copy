@@ -1,0 +1,10 @@
+import { combineReducers } from 'redux';
+import auth from './authReducer';
+
+const appReducer = combineReducers({
+  auth,
+});
+
+const rootReducer = (state, action) => appReducer(state, action);
+
+export default rootReducer;
