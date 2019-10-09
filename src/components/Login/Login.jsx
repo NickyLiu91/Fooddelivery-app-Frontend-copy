@@ -38,7 +38,7 @@ class Login extends Component {
   onSubmit = async e => {
     e.preventDefault();
     try {
-      this.setState({ loading: true });
+      this.setState({ loading: true, error: '' });
       await AuthService.login();
       this.setState({ loading: false });
     } catch (error) {

@@ -13,7 +13,7 @@ export const BASE_URL = process.env.REACT_APP_FOS_FRONTEND_BASE_URL;
 export const mock = new MockAdapter(axios, { delayResponse: 700 });
 mock
   .onPost(`${BASE_URL}/auth/email/login`).replyOnce(200, {
-    token: 'eyJ0eXAiOiJKV1QiLCJhbG...',
+    token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoicm9vdCJ9.t5-3Wx56tLv-PeOdH359ojpGNlQOd40G3Z60PONOf1Q',
     refresh_token: 'xxx00a7a9e970f9bbe076e05743....',
   })
   .onPost(`${BASE_URL}/auth/email/login`).replyOnce(HTTP.UNAUTHORIZED, {

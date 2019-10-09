@@ -7,7 +7,8 @@ import { ThemeProvider } from '@material-ui/styles';
 import { store, persistor } from './reducers/store';
 import theme from './mui-theme';
 
-import Login from 'components/Auth/Login';
+import Routes from 'routes/Routes';
+import routes from 'routes';
 
 function App() {
   return (
@@ -15,7 +16,7 @@ function App() {
       <PersistGate loading={null} persistor={persistor}>
         <BrowserRouter>
           <ThemeProvider theme={theme}>
-            <Login />
+            <Routes routes={routes} />
           </ThemeProvider>
         </BrowserRouter>
       </PersistGate>

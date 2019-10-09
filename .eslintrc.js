@@ -20,6 +20,8 @@ module.exports = {
     'arrow-parens': 0,
     'import/first': 0,
     'no-console': 0,
+    'import/prefer-default-export': 0,
+    'import/extensions': 0,
   },
   'settings': {
     'import/resolver': {

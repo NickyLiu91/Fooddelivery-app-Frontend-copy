@@ -4,11 +4,8 @@ const initialState = {
   authenticated: false,
   token: null,
   refreshToken: null,
-  user: {},
-  permissions: {
-    root: null,
-    admin: null,
-    manager: null,
+  user: {
+    role: null,
   },
 };
 
@@ -20,6 +17,7 @@ export default (state = initialState, { type, payload }) => {
         token: payload.token,
         refreshToken: payload.refreshToken,
         authenticated: true,
+        user: payload.user,
       };
     case LOGOUT:
       return state;

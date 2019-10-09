@@ -34,3 +34,12 @@ export const routerMatchType = shape({
   url: string.isRequired,
   params: PropTypes.object,
 });
+
+export const authType = shape({
+  authenticated: bool.isRequired,
+  token: string,
+  refreshToken: string,
+  user: shape({
+    role: string,
+  }),
+});
