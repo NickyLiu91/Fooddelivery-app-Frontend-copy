@@ -5,6 +5,7 @@ import MockAdapter from 'axios-mock-adapter';
 import { store } from 'reducers/store';
 import { loginSuccess } from 'actions/authActions';
 import { HTTP } from 'constants/http';
+import { fakeUsersList } from './mockData';
 
 // TODO: setup environment
 export const BASE_URL = process.env.REACT_APP_FOS_FRONTEND_BASE_URL;
@@ -13,7 +14,7 @@ export const BASE_URL = process.env.REACT_APP_FOS_FRONTEND_BASE_URL;
 export const mock = new MockAdapter(axios, { delayResponse: 700 });
 mock
   .onPost(`${BASE_URL}/auth/email/login`).replyOnce(200, {
-    token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoicm9vdCJ9.t5-3Wx56tLv-PeOdH359ojpGNlQOd40G3Z60PONOf1Q',
+    token: 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiUk9MRV9TVVBFUl9BRE1JTiIsImp0aSI6ImZmOWQ5MzY0LWI2YmQtNDUzNC04YjY5LWM0ZTc3NDRhMzA5YSIsImlhdCI6MTU3MDcwOTUyMCwiZXhwIjoxNTcwNzEzMTIwfQ.KfUBPaKYtOoTF5lSv4kCeoYI5VkeIQ5s2vMg5PAs_yw',
     refresh_token: 'xxx00a7a9e970f9bbe076e05743....',
   })
   .onPost(`${BASE_URL}/auth/email/login`).replyOnce(HTTP.UNAUTHORIZED, {
@@ -29,6 +30,9 @@ mock
     token: 'new_eyJ0eXAiOiJKV1QiLCJhbG...',
     refresh_token: 'new_xxx00a7a9e970f9bbe076e05743....',
   });
+
+mock
+  .onGet(`${BASE_URL}/users`).reply(200, fakeUsersList);
 
 
 class Http {

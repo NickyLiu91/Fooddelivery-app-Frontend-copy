@@ -22,6 +22,7 @@ module.exports = {
     'no-console': 0,
     'import/prefer-default-export': 0,
     'import/extensions': 0,
+    'react/no-did-mount-set-state': 0,
   },
   'settings': {
     'import/resolver': {

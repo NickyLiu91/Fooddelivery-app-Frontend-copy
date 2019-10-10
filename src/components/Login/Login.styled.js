@@ -23,4 +23,3 @@ export const styles = theme => ({
   },
 });
 
-export const foo = '';

@@ -1,7 +1,10 @@
 import ROUTES from 'constants/routes';
 import { USER_ROLES } from 'constants/auth';
 
-import Login from 'components/Login/Login';
+import {
+  Login,
+  UsersList,
+} from 'components/';
 
 export const defaultRoutes = {
   [USER_ROLES.ROOT]: ROUTES.RESTAURANTS_LIST,
@@ -37,6 +40,13 @@ const routes = [
     name: 'Manage orders',
     component: Login,
     permissions: [USER_ROLES.ROOT, USER_ROLES.ADMIN, USER_ROLES.MANAGER],
+  },
+  {
+    path: ROUTES.USERS_LIST,
+    exact: true,
+    name: 'Users List',
+    component: UsersList,
+    permissions: [USER_ROLES.ROOT],
   },
   {
     path: '/',

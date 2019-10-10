@@ -1,5 +1,6 @@
 export const USER_ROLES = {
-  ROOT: 'root',
-  ADMIN: 'admin',
-  MANAGER: 'manager',
+  ROOT: 'ROLE_SUPER_ADMIN',
+  ADMIN: 'ROLE_ADMIN',
+  MANAGER: 'ROLE_MANAGER',
+  USER: 'ROLE_USER',
 };
