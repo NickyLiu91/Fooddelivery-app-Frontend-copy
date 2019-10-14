@@ -43,3 +43,5 @@ export const authType = shape({
     role: string,
   }),
 });
+
+export const materialClassesType = object;

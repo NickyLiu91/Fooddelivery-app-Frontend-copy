@@ -5,7 +5,7 @@ import MockAdapter from 'axios-mock-adapter';
 import { store } from 'reducers/store';
 import { loginSuccess } from 'actions/authActions';
 import { HTTP } from 'constants/http';
-import { fakeUsersList } from './mockData';
+import { fakeUsersList, fakeSelectData } from './mockData';
 
 // TODO: setup environment
 export const BASE_URL = process.env.REACT_APP_FOS_FRONTEND_BASE_URL;
@@ -31,8 +31,13 @@ mock
     refresh_token: 'new_xxx00a7a9e970f9bbe076e05743....',
   });
 
+const usersPath = `${BASE_URL}/users`;
+const usersUrl = new RegExp(`${usersPath}/*`);
 mock
-  .onGet(`${BASE_URL}/users`).reply(200, fakeUsersList);
+  .onGet(usersUrl).reply(200, fakeUsersList);
+
+mock
+  .onGet(`${BASE_URL}/restaurants`).reply(200, fakeSelectData);
 
 
 class Http {

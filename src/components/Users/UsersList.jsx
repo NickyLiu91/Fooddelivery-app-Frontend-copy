@@ -1,27 +1,29 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { withStyles } from '@material-ui/styles';
-import PropTypes from 'prop-types';
 
-import { UsersListService } from 'services';
+import { UsersListService, RestaurantsService } from 'services';
 import { getQueryParam } from 'sdk/utils';
 
 import {
   Table,
   TableBody,
   TableCell,
-  TableHead,
   TableRow,
   Paper,
   Container,
-  TableSortLabel,
   Typography,
-  TablePagination,
+  CircularProgress,
+  Grid,
+  Button,
 } from '@material-ui/core';
 import { listStyles } from './Users.styled';
-import { routerHistoryType } from 'types';
+import { routerHistoryType, materialClassesType } from 'types';
+import Select from 'components/common/Select/Select';
+import TableSort from 'components/common/TableSort/TableSort';
+import Pagination from 'components/common/Pagination/Pagination';
 
-const USER_MODEL = {
+const DATA_MODEL = {
   firstName: 'first_name',
   lastName: 'last_name',
   lastSeen: 'last_seen',
@@ -30,70 +32,31 @@ const USER_MODEL = {
 };
 
 const getPaginationParams = () => ({
-  currentPage: +getQueryParam('page') || 0,
-  sortBy: getQueryParam('sortBy') || USER_MODEL.firstName,
+  page: +getQueryParam('page') || 0,
+  sortBy: getQueryParam('sortBy') || DATA_MODEL.firstName,
   sortOrder: getQueryParam('sortOrder') || 'asc',
 });
 
 const headCells = [
-  { id: USER_MODEL.firstName, label: 'First Name', sort: true },
-  { id: USER_MODEL.lastName, label: 'Last Name', sort: true },
-  { id: USER_MODEL.restaurant, label: 'Restaurant' },
-  { id: USER_MODEL.role, label: 'User Class' },
-  { id: USER_MODEL.lastSeen, label: 'Last logged in', sort: true },
+  { id: DATA_MODEL.firstName, label: 'First Name', sort: true },
+  { id: DATA_MODEL.lastName, label: 'Last Name', sort: true },
+  { id: DATA_MODEL.restaurant, label: 'Restaurant' },
+  { id: DATA_MODEL.role, label: 'User Class' },
+  { id: DATA_MODEL.lastSeen, label: 'Last logged in', sort: true },
 ];
-
-function EnhancedTableHead(props) {
-  const {
-    order,
-    orderBy,
-    onSort,
-  } = props;
-  const createSortHandler = property => event => {
-    onSort(event, property);
-  };
-
-  return (
-    <TableHead>
-      <TableRow>
-        {headCells.map(headCell => (
-          <TableCell
-            key={headCell.label}
-            sortDirection={orderBy === headCell.id ? order : false}
-          >
-            { headCell.sort ? (
-              <TableSortLabel
-                active={orderBy === headCell.id}
-                direction={order}
-                onClick={createSortHandler(headCell.id)}
-              >
-                {headCell.label}
-              </TableSortLabel>
-            ) : (
-              headCell.label
-            )}
-          </TableCell>
-        ))}
-      </TableRow>
-    </TableHead>
-  );
-}
-
-EnhancedTableHead.propTypes = {
-  onSort: PropTypes.func.isRequired,
-  order: PropTypes.oneOf(['asc', 'desc']).isRequired,
-  orderBy: PropTypes.string.isRequired,
-};
-
 
 class UsersList extends Component {
   state = {
-    usersList: [],
-    sortBy: USER_MODEL.firstName,
+    users: [],
+    restaurants: [],
+    restaurantsLoading: false,
+    restaurant: null,
+    sortBy: DATA_MODEL.firstName,
     sortOrder: 'asc',
-    currentPage: 0,
-    // pagesTotal: 1,
+    page: 0,
     rowsPerPage: 5,
+    tableLoading: false,
+    totalUsers: 0,
   }
 
   componentDidMount() {
@@ -103,108 +66,148 @@ class UsersList extends Component {
       {
         ...paginationParams,
       },
-      () => this.getUsers(),
+      () => this.getRestaurants(),
     );
   }
 
-  async getUsers() {
+  getUsers = async () => {
     const {
       rowsPerPage,
       sortBy,
       sortOrder,
-      currentPage,
+      page,
     } = this.state;
+    this.setState({ tableLoading: true });
     try {
       const data = await UsersListService.getUsersList({
         limit: rowsPerPage,
-        offset: rowsPerPage * currentPage,
+        offset: rowsPerPage * page,
         sort: { order: sortOrder, sortBy },
       });
-      this.setState({ usersList: data });
+      this.setState({
+        users: data,
+        tableLoading: false,
+        // TODO: change to total from response after sync
+        totalUsers: data.length,
+      });
     } catch (error) {
       console.log('error', error);
     }
   }
 
-  handleSort = (event, prop) => {
-    const { sortOrder, sortBy } = this.state;
-    const order = sortBy === prop && sortOrder === 'asc' ? 'desc' : 'asc';
+  getRestaurants = async () => {
     this.setState({
-      sortBy: prop,
-      sortOrder: order,
+      restaurantsLoading: true,
     });
-
-    this.props.history.push({
-      search: `?sortBy=${prop}&sortOrder=${order}`,
-    });
+    try {
+      const data = await RestaurantsService.getRestaurantsList();
+      this.setState({
+        restaurants: data,
+        restaurantsLoading: false,
+      });
+    } catch (error) {
+      console.log('error', error);
+    }
   }
 
-  handleChangePage = (event, newPage) => {
-    this.setState(
-      { currentPage: newPage },
-      () => this.getUsers(),
-    );
-  };
+  handleRestaurantChange = (value) => {
+    this.setState({ restaurant: value ? value.value : null });
+    this.getUsers();
+  }
 
-  handleChangeRowsPerPage = event => {
+  handleSort = (sort) => {
     this.setState(
-      { rowsPerPage: event.target.value },
+      { ...sort },
       () => this.getUsers(),
     );
-  };
+  }
+
+  handlePaginationChange = (pagination) => {
+    this.setState(
+      { ...pagination },
+      () => this.getUsers(),
+    );
+  }
 
 
   render() {
     const {
-      usersList,
+      users,
       sortBy,
       sortOrder,
-      currentPage,
+      page,
       rowsPerPage,
+      tableLoading,
+      restaurantsLoading,
+      restaurants,
+      restaurant,
+      totalUsers,
     } = this.state;
+    const { classes } = this.props;
 
     return (
       <Container>
-        <Typography variant="h3">
+        <Typography variant="h4">
           Manage Users
         </Typography>
-        <Paper className={listStyles.root}>
-          <Table className={listStyles.table}>
-            <EnhancedTableHead
-              onSort={this.handleSort}
-              order={sortOrder}
-              orderBy={sortBy}
+        <Grid container spacing={3}>
+          <Grid item md={6}>
+            <Select
+              isLoading={restaurantsLoading}
+              data={restaurants}
+              label="Restaurant"
+              placeholder="Select Restaurant"
+              onChange={this.handleRestaurantChange}
             />
-            <TableBody>
-              {usersList.map(user => (
-                <TableRow key={user.id}>
-                  <TableCell component="th" scope="row">
-                    {user.first_name}
-                  </TableCell>
-                  <TableCell>{user.last_name}</TableCell>
-                  <TableCell>{user.restaurant}</TableCell>
-                  <TableCell>{user.role}</TableCell>
-                  <TableCell>{user.last_seen}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          <TablePagination
-            rowsPerPageOptions={[5, 10, 25]}
-            component="div"
-            count={usersList.length}
-            rowsPerPage={rowsPerPage}
-            page={currentPage}
-            backIconButtonProps={{
-              'aria-label': 'previous page',
-            }}
-            nextIconButtonProps={{
-              'aria-label': 'next page',
-            }}
-            onChangePage={this.handleChangePage}
-            onChangeRowsPerPage={this.handleChangeRowsPerPage}
-          />
-        </Paper>
+          </Grid>
+          <Grid item md={6}>
+            <Button variant="contained" color="primary">
+              Create User
+            </Button>
+          </Grid>
+        </Grid>
+        { restaurant ? (
+          <Paper className={classes.root}>
+            <Table className={classes.table}>
+              <TableSort
+                onSort={this.handleSort}
+                order={sortOrder}
+                orderBy={sortBy}
+                disabled={tableLoading}
+                cells={headCells}
+                defaultSortProp={DATA_MODEL.firstName}
+                history={this.props.history}
+              />
+              <TableBody>
+                { tableLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={5} align="center">
+                      <CircularProgress />
+                    </TableCell>
+                  </TableRow>
+                ) : users.map(user => (
+                  <TableRow key={user.id}>
+                    <TableCell component="th" scope="row">
+                      {user.first_name}
+                    </TableCell>
+                    <TableCell>{user.last_name}</TableCell>
+                    <TableCell>{user.restaurant}</TableCell>
+                    <TableCell>{user.role}</TableCell>
+                    <TableCell>{user.last_seen}</TableCell>
+                  </TableRow>
+                  ))
+                }
+              </TableBody>
+            </Table>
+            <Pagination
+              rowsPerPage={rowsPerPage}
+              page={page}
+              onChange={this.handlePaginationChange}
+              totalRows={totalUsers}
+              history={this.props.history}
+            />
+          </Paper>
+        ) : null }
       </Container>
     );
   }
@@ -212,6 +215,7 @@ class UsersList extends Component {
 
 UsersList.propTypes = {
   history: routerHistoryType.isRequired,
+  classes: materialClassesType.isRequired,
 };
 
 export default connect()(withStyles(listStyles)(UsersList));

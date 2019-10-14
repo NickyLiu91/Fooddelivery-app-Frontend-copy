@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { withStyles } from '@material-ui/styles';
-import PropTypes from 'prop-types';
 import {
   Avatar,
   Button,
@@ -18,6 +17,7 @@ import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
 
 import AuthService from 'services/authService';
 import { styles } from './Login.styled';
+import { materialClassesType } from 'types';
 
 class Login extends Component {
   state = {
@@ -125,7 +125,7 @@ class Login extends Component {
 
 Login.propTypes = {
   // eslint-disable-next-line react/forbid-prop-types
-  classes: PropTypes.object.isRequired,
+  classes: materialClassesType.isRequired,
 };
 
 export default connect(null, null)(withStyles(styles)(Login));

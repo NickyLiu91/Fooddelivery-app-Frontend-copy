@@ -1,11 +1,12 @@
 import HttpModel from './HttpModel';
+import { formQueryString } from 'sdk/utils';
 
 export default class Crud {
   constructor(entinty) {
     this.entity = entinty;
   }
 
-  getList = params => HttpModel.get(`/${this.entity}`, params);
+  getList = params => HttpModel.get(`/${this.entity}${formQueryString(params)}`);
 
   getSingle = entityId => HttpModel.get(`/${this.entity}/${entityId}`);
 
