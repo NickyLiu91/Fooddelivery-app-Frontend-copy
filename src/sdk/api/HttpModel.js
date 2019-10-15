@@ -33,8 +33,14 @@ mock
 
 const usersPath = `${BASE_URL}/users`;
 const usersUrl = new RegExp(`${usersPath}/*`);
+
+const usersRestaurantPath = `${BASE_URL}/restaurants`;
+const usersRestaurantUrl = new RegExp(`${usersRestaurantPath}/.*/users*`);
+
 mock
   .onGet(usersUrl).reply(200, fakeUsersList);
+mock
+  .onGet(usersRestaurantUrl).reply(200, fakeUsersList.slice(0, 6));
 
 mock
   .onGet(`${BASE_URL}/restaurants`).reply(200, fakeSelectData);
@@ -47,6 +53,7 @@ class Http {
 
     this.client.interceptors.request.use(
       (config) => {
+        console.log('[API request] config:', config);
         if (!store.getState().auth.authenticated) {
           return config;
         }

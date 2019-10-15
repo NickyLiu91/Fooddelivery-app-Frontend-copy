@@ -52,3 +52,17 @@ export const useStyles = makeStyles(theme => ({
     height: theme.spacing(2),
   },
 }));
+
+export const selectStyles = theme => ({
+  input: base => ({
+    ...base,
+    color: theme.palette.text.primary,
+    '& input': {
+      font: 'inherit',
+    },
+  }),
+  indicatorsContainer: base => ({
+    ...base,
+    cursor: 'pointer',
+  }),
+});

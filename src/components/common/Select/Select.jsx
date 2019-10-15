@@ -6,7 +6,7 @@ import ReactSelect from 'react-select';
 import { useTheme } from '@material-ui/core/styles';
 import NoSsr from '@material-ui/core/NoSsr';
 import components from './selectComponents';
-import { useStyles } from './Select.styled';
+import { useStyles, selectStyles } from './Select.styled';
 
 
 export default function Select(props) {
@@ -32,22 +32,14 @@ export default function Select(props) {
     }
   };
 
-  const selectStyles = {
-    input: base => ({
-      ...base,
-      color: theme.palette.text.primary,
-      '& input': {
-        font: 'inherit',
-      },
-    }),
-  };
+  const styles = selectStyles(theme);
 
   return (
     <div className={classes.root}>
       <NoSsr>
         <ReactSelect
           classes={classes}
-          styles={selectStyles}
+          styles={styles}
           inputId="react-select"
           TextFieldProps={{
             label,

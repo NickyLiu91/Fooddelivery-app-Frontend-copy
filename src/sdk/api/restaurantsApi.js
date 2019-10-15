@@ -1,10 +1,10 @@
 import { Crud } from '.';
 
-export const PATH = 'restaurants';
+export const RESTAURANTS_PATH = 'restaurants';
 
 class RestaurantsApi extends Crud {
   constructor() {
-    super(PATH);
+    super(RESTAURANTS_PATH);
   }
 }
 

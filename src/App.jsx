@@ -3,12 +3,14 @@ import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
 import { BrowserRouter } from 'react-router-dom';
 import { ThemeProvider } from '@material-ui/styles';
+import { SnackbarProvider } from 'notistack';
 
 import { store, persistor } from './reducers/store';
 import theme from './mui-theme';
 
 import Routes from 'routes/Routes';
 import routes from 'routes';
+import Notifier from 'components/common/Notifier/Notifier';
 
 function App() {
   return (
@@ -16,7 +18,10 @@ function App() {
       <PersistGate loading={null} persistor={persistor}>
         <BrowserRouter>
           <ThemeProvider theme={theme}>
-            <Routes routes={routes} />
+            <SnackbarProvider>
+              <Notifier />
+              <Routes routes={routes} />
+            </SnackbarProvider>
           </ThemeProvider>
         </BrowserRouter>
       </PersistGate>

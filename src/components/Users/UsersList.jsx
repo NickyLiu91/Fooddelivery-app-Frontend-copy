@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { withStyles } from '@material-ui/styles';
 
-import { UsersListService, RestaurantsService } from 'services';
+import { UsersListService, RestaurantsService, notifyService as notifier } from 'services';
 import { getQueryParam } from 'sdk/utils';
 
 import {
@@ -18,10 +18,11 @@ import {
   Button,
 } from '@material-ui/core';
 import { listStyles } from './Users.styled';
-import { routerHistoryType, materialClassesType } from 'types';
+import { routerHistoryType, materialClassesType, authType } from 'types';
 import Select from 'components/common/Select/Select';
 import TableSort from 'components/common/TableSort/TableSort';
 import Pagination from 'components/common/Pagination/Pagination';
+import { USER_ROLES } from 'constants/auth';
 
 const DATA_MODEL = {
   firstName: 'first_name',
@@ -57,16 +58,25 @@ class UsersList extends Component {
     rowsPerPage: 5,
     tableLoading: false,
     totalUsers: 0,
+    isSuperAdmin: false,
   }
 
   componentDidMount() {
+    const isSuperAdmin = this.props.auth.user.role === USER_ROLES.ROOT;
+    this.setState({ isSuperAdmin });
     const paginationParams = getPaginationParams();
 
     this.setState(
       {
         ...paginationParams,
       },
-      () => this.getRestaurants(),
+      () => {
+        if (isSuperAdmin) {
+          this.getRestaurants();
+        } else {
+          this.getUsers();
+        }
+      },
     );
   }
 
@@ -76,14 +86,23 @@ class UsersList extends Component {
       sortBy,
       sortOrder,
       page,
+      isSuperAdmin,
+      restaurant,
     } = this.state;
     this.setState({ tableLoading: true });
+    const pageData = {
+      limit: rowsPerPage,
+      offset: rowsPerPage * page,
+      sort_order: sortOrder,
+      sort_by: sortBy,
+    };
     try {
-      const data = await UsersListService.getUsersList({
-        limit: rowsPerPage,
-        offset: rowsPerPage * page,
-        sort: { order: sortOrder, sortBy },
-      });
+      let data = null;
+      if (isSuperAdmin) {
+        data = await UsersListService.getUsersForRestaurant(restaurant, pageData);
+      } else {
+        data = await UsersListService.getUsersList(pageData);
+      }
       this.setState({
         users: data,
         tableLoading: false,
@@ -91,7 +110,11 @@ class UsersList extends Component {
         totalUsers: data.length,
       });
     } catch (error) {
-      console.log('error', error);
+      const { response } = error;
+      this.setState({
+        tableLoading: false,
+      });
+      notifier.showError(response && response.data && response.data.message ? response.data.message : 'Unknown error');
     }
   }
 
@@ -106,13 +129,20 @@ class UsersList extends Component {
         restaurantsLoading: false,
       });
     } catch (error) {
-      console.log('error', error);
+      this.setState({ restaurantsLoading: false });
+      const { response } = error;
+      notifier.showError(response && response.data && response.data.message ? response.data.message : 'Unknown error');
     }
   }
 
   handleRestaurantChange = (value) => {
-    this.setState({ restaurant: value ? value.value : null });
-    this.getUsers();
+    const restaurantId = value ? value.value : null;
+    this.setState(
+      { restaurant: restaurantId },
+      () => {
+        if (restaurantId) this.getUsers();
+      },
+    );
   }
 
   handleSort = (sort) => {
@@ -142,6 +172,7 @@ class UsersList extends Component {
       restaurants,
       restaurant,
       totalUsers,
+      isSuperAdmin,
     } = this.state;
     const { classes } = this.props;
 
@@ -151,22 +182,24 @@ class UsersList extends Component {
           Manage Users
         </Typography>
         <Grid container spacing={3}>
-          <Grid item md={6}>
-            <Select
-              isLoading={restaurantsLoading}
-              data={restaurants}
-              label="Restaurant"
-              placeholder="Select Restaurant"
-              onChange={this.handleRestaurantChange}
-            />
-          </Grid>
+          { isSuperAdmin && (
+            <Grid item md={6}>
+              <Select
+                isLoading={restaurantsLoading}
+                data={restaurants}
+                label="Restaurant"
+                placeholder="Select Restaurant"
+                onChange={this.handleRestaurantChange}
+              />
+            </Grid>
+          )}
           <Grid item md={6}>
             <Button variant="contained" color="primary">
               Create User
             </Button>
           </Grid>
         </Grid>
-        { restaurant ? (
+        { !isSuperAdmin || restaurant ? (
           <Paper className={classes.root}>
             <Table className={classes.table}>
               <TableSort
@@ -216,6 +249,11 @@ class UsersList extends Component {
 UsersList.propTypes = {
   history: routerHistoryType.isRequired,
   classes: materialClassesType.isRequired,
+  auth: authType.isRequired,
 };
 
-export default connect()(withStyles(listStyles)(UsersList));
+const mapStateToProps = state => ({
+  auth: state.auth,
+});
+
+export default connect(mapStateToProps, null)(withStyles(listStyles)(UsersList));
