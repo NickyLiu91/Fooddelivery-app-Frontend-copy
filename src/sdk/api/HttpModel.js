@@ -37,13 +37,25 @@ const usersUrl = new RegExp(`${usersPath}/*`);
 const usersRestaurantPath = `${BASE_URL}/restaurants`;
 const usersRestaurantUrl = new RegExp(`${usersRestaurantPath}/.*/users*`);
 
-mock
-  .onGet(usersUrl).reply(200, fakeUsersList);
-mock
-  .onGet(usersRestaurantUrl).reply(200, fakeUsersList.slice(0, 6));
-
-mock
-  .onGet(`${BASE_URL}/restaurants`).reply(200, fakeSelectData);
+mock.onGet(usersUrl).reply(200, fakeUsersList);
+mock.onGet(usersRestaurantUrl).reply(200, fakeUsersList.slice(0, 6));
+mock.onGet(`${BASE_URL}/restaurants`).reply(200, fakeSelectData);
+mock.onPost(`${BASE_URL}/auth/email/reset`).reply(200, fakeSelectData);
+mock.onPost(`${BASE_URL}/auth/email/confirm`).reply(200);
+// mock
+//   .onPost(`${BASE_URL}/auth/email/reset`).reply(403, {
+//     message: 'Error during sending the request',
+//     errors: {
+//       email: 'Invalid field value',
+//     },
+//   });
+// mock
+//   .onPost(`${BASE_URL}/auth/email/confirm`).reply(403, {
+//     message: 'Error during sending the request',
+//     errors: {
+//       new_pas: 'Invalid field value',
+//     },
+//   });
 
 
 class Http {

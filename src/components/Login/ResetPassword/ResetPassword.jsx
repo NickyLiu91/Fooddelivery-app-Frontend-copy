@@ -6,7 +6,6 @@ import {
   Button,
   CssBaseline,
   TextField,
-  Grid,
   Typography,
   Container,
   CircularProgress,
@@ -15,15 +14,15 @@ import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
 
 
 import AuthService from 'services/authService';
-import { styles } from './Login.styled';
+import { styles } from '../Login.styled';
 import { materialClassesType, routerHistoryType } from 'types';
+import { notifyService } from 'services';
 import ROUTES from 'constants/routes';
 
-class Login extends Component {
+class ResetPassword extends Component {
   state = {
     data: {
       email: '',
-      password: '',
     },
     error: null,
     loading: false,
@@ -37,16 +36,34 @@ class Login extends Component {
 
   onSubmit = async e => {
     e.preventDefault();
-    const { email, password } = this.state.data;
     try {
       this.setState({ loading: true, error: '' });
-      await AuthService.login({ email, password });
+      await AuthService.resetPassword(this.state.data.email);
       this.setState({ loading: false });
+      notifyService.showSuccess('We successfully sent you the email with a link to reset password.');
+      this.props.history.push(ROUTES.LOGIN);
     } catch (error) {
-      const { response } = error;
+      this.setState({ loading: false });
+      this.handleError(error);
+    }
+  }
+
+  handleError = err => {
+    console.log('err', err);
+    const { response } = err;
+    if (response && response.data) {
+      if (response.data.errors) {
+        this.setState({
+          // waiting for errors description...
+          error: response.data.errors.email,
+        });
+      } else {
+        notifyService.showError(response.data.message);
+        this.props.history.push(ROUTES.LOGIN);
+      }
+    } else {
       this.setState({
-        error: response && response.data && response.data.message ? response.data.message : 'Unknown error',
-        loading: false,
+        error: 'Unknown error',
       });
     }
   }
@@ -64,7 +81,7 @@ class Login extends Component {
             <LockOutlinedIcon />
           </Avatar>
           <Typography component="h1" variant="h5">
-            Sign in
+            Reset Password
           </Typography>
           <form className={classes.form} onSubmit={this.onSubmit}>
             <TextField
@@ -80,19 +97,6 @@ class Login extends Component {
               onChange={this.onInputChange}
               autoFocus
             />
-            <TextField
-              variant="outlined"
-              margin="normal"
-              required
-              fullWidth
-              name="password"
-              label="Password"
-              value={data.password}
-              onChange={this.onInputChange}
-              type="password"
-              id="password"
-              autoComplete="current-password"
-            />
             <Button
               type="submit"
               fullWidth
@@ -101,34 +105,22 @@ class Login extends Component {
               color="primary"
               className={classes.submit}
             >
-              { loading ? <CircularProgress size={24} /> : 'Sign In' }
+              { loading ? <CircularProgress size={24} /> : 'Reset Password' }
             </Button>
-            <Grid container>
-              <Grid item xs>
-                <Button
-                  onClick={() => this.props.history.push(ROUTES.RESET_PASSWORD)}
-                >
-                  Forgot password?
-                </Button>
-              </Grid>
-            </Grid>
             <Typography align="center" color="error">
               { error }
             </Typography>
           </form>
         </div>
-        {/* <Box mt={8}>
-          <Copyright />
-        </Box> */}
       </Container>
 
     );
   }
 }
 
-Login.propTypes = {
+ResetPassword.propTypes = {
   classes: materialClassesType.isRequired,
   history: routerHistoryType.isRequired,
 };
 
-export default connect(null, null)(withStyles(styles)(Login));
+export default connect(null, null)(withStyles(styles)(ResetPassword));

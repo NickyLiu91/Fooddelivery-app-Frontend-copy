@@ -4,6 +4,8 @@ import { USER_ROLES } from 'constants/auth';
 import {
   Login,
   UsersList,
+  ResetPassword,
+  ConfirmPassword,
 } from 'components/';
 
 export const defaultRoutes = {
@@ -18,6 +20,20 @@ const routes = [
     exact: true,
     name: 'Login',
     component: Login,
+    isProtected: false,
+  },
+  {
+    path: ROUTES.RESET_PASSWORD,
+    exact: true,
+    name: 'Reset Password',
+    component: ResetPassword,
+    isProtected: false,
+  },
+  {
+    path: ROUTES.CONFIRM_PASSWORD,
+    exact: true,
+    name: 'Set New Password',
+    component: ConfirmPassword,
     isProtected: false,
   },
   {
