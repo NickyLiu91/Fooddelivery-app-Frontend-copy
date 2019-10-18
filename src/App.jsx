@@ -10,7 +10,7 @@ import theme from './mui-theme';
 
 import Routes from 'routes/Routes';
 import routes from 'routes';
-import Notifier from 'components/common/Notifier/Notifier';
+import { Notifier } from 'components/common/';
 
 function App() {
   return (

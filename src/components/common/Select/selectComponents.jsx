@@ -52,12 +52,19 @@ function Control(props) {
     children,
     innerProps,
     innerRef,
-    selectProps: { classes, TextFieldProps },
+    selectProps: {
+      classes,
+      TextFieldProps,
+      error,
+      helperText,
+    },
   } = props;
 
   return (
     <TextField
       fullWidth
+      error={error}
+      helperText={helperText}
       InputProps={{
         inputComponent,
         inputProps: {

@@ -61,7 +61,7 @@ TableSort.propTypes = {
   orderBy: PropTypes.string.isRequired,
   disabled: PropTypes.bool,
   cells: PropTypes.arrayOf(PropTypes.shape({
-    id: PropTypes.string.isRequired,
+    id: PropTypes.string,
     label: PropTypes.string.isRequired,
     sort: PropTypes.bool,
   })).isRequired,

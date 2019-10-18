@@ -8,10 +8,10 @@ import NoSsr from '@material-ui/core/NoSsr';
 import components from './selectComponents';
 import { useStyles, selectStyles } from './Select.styled';
 
-
 export default function Select(props) {
   const {
     data,
+    value,
     label,
     placeholder,
     onChange,
@@ -19,20 +19,17 @@ export default function Select(props) {
     isClearable,
     isSearchable,
     isMulti,
+    ...rest
   } = props;
 
   const classes = useStyles();
   const theme = useTheme();
-  const [option, setOption] = React.useState(null);
-
-  const onSelectChange = value => {
-    if (!option || !value || option.value !== value.value) {
-      setOption(value);
-      onChange(value);
-    }
-  };
-
   const styles = selectStyles(theme);
+
+  const cleanValue =
+    typeof value === 'string' && value.length && !isMulti
+      ? data.find(option => option.value === value)
+      : value;
 
   return (
     <div className={classes.root}>
@@ -51,12 +48,13 @@ export default function Select(props) {
           placeholder={placeholder}
           options={data}
           components={components}
-          value={option}
-          onChange={onSelectChange}
+          value={cleanValue}
+          onChange={val => onChange(val)}
           isLoading={isLoading}
           isClearable={isClearable}
           isMulti={isMulti}
           isSearchable={isSearchable}
+          {...rest}
         />
       </NoSsr>
     </div>
@@ -65,7 +63,7 @@ export default function Select(props) {
 
 Select.propTypes = {
   label: PropTypes.string.isRequired,
-  isLoading: PropTypes.bool.isRequired,
+  isLoading: PropTypes.bool,
   data: PropTypes.arrayOf(PropTypes.shape({
     value: PropTypes.string.isRequired,
     label: PropTypes.string.isRequired,
@@ -75,10 +73,12 @@ Select.propTypes = {
   isMulti: PropTypes.bool,
   onChange: PropTypes.func.isRequired,
   isSearchable: PropTypes.bool,
+  value: PropTypes.any,
 };
 
 Select.defaultProps = {
   isClearable: true,
   isMulti: false,
   isSearchable: true,
+  isLoading: false,
 };

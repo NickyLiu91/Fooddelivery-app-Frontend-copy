@@ -6,8 +6,9 @@ export const fakeUsersList = [
     first_name: 'John',
     last_name: 'Doe',
     last_seen: 1570708862011,
-    restaurant: 'Jack Bao Foods',
+    restaurant: 'Belarus',
     role: USER_ROLES.ADMIN,
+    email: 'test@test.com',
   },
   {
     id: 2,

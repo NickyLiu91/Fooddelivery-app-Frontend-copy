@@ -6,6 +6,7 @@ import {
   UsersList,
   ResetPassword,
   ConfirmPassword,
+  EditUser,
 } from 'components/';
 
 export const defaultRoutes = {
@@ -62,7 +63,21 @@ const routes = [
     exact: true,
     name: 'Users List',
     component: UsersList,
-    permissions: [USER_ROLES.ROOT],
+    permissions: [USER_ROLES.ROOT, USER_ROLES.ADMIN],
+  },
+  {
+    path: `${ROUTES.USER}/:id/edit`,
+    exact: false,
+    name: 'Edit User',
+    component: EditUser,
+    permissions: [USER_ROLES.ROOT, USER_ROLES.ADMIN],
+  },
+  {
+    path: `${ROUTES.USER}/add`,
+    exact: true,
+    name: 'Add User',
+    component: EditUser,
+    permissions: [USER_ROLES.ROOT, USER_ROLES.ADMIN],
   },
   {
     path: '/',

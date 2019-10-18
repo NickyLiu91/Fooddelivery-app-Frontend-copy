@@ -8,6 +8,7 @@
     "@material-ui/styles": "^4.5.0",
     "axios": "^0.19.0",
     "clsx": "^1.0.4",
+    "formik": "^1.5.8",
     "jwt-decode": "^2.2.0",
     "lodash": "^4.17.15",
     "notistack": "^0.8.9",
@@ -21,7 +22,8 @@
     "redux": "^4.0.4",
     "redux-persist": "^6.0.0",
     "redux-thunk": "^2.3.0",
-    "typeface-roboto": "^0.0.75"
+    "typeface-roboto": "^0.0.75",
+    "yup": "^0.27.0"
   },
   "scripts": {
     "start": "react-scripts start",

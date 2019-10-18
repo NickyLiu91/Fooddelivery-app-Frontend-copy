@@ -6,6 +6,7 @@ const ROUTES = {
   RESTAURANTS_DASHBOARD: '/restaurant-dashboard',
   MANAGE_ORDERS: '/manage-orders',
   USERS_LIST: '/users-list',
+  USER: '/user',
 };
 
 export default ROUTES;

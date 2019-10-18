@@ -7,6 +7,7 @@ export const useStyles = makeStyles(theme => ({
     '& .indicatorContainer': {
       cursor: 'pointer',
     },
+    paddingTop: '11px',
   },
   input: {
     display: 'flex',
