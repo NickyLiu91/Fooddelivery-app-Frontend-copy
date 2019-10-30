@@ -26,6 +26,7 @@ QA:
     stage: deploy
     variables:
         AWS_S3_BUCKET: ${QA_AWS_S3_BUCKET}
+        REACT_APP_API_URL: ${QA_REACT_APP_API_URL}
     before_script:
         - apt-get update
         - apt-get -y install python3-pip
