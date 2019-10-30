@@ -5,10 +5,11 @@ import axios from 'axios';
 import { store } from 'reducers/store';
 import { loginSuccess } from 'actions/authActions';
 import { HTTP } from 'constants/http';
+import ENV from 'config/env';
 // import { fakeUsersList, fakeSelectData, fakeSelfData, fakeHours } from './mockData';
 
 // TODO: setup environment
-export const BASE_URL = process.env.REACT_APP_API_URL;
+export const BASE_URL = ENV.REACT_APP_API_URL;
 
 // Temporary mock API
 // export const mock = new MockAdapter(axios, { delayResponse: 700 });
