@@ -33,11 +33,10 @@ import { USER_ROLES } from 'constants/auth';
 import ROUTES from 'constants/routes';
 
 const DATA_MODEL = {
-  firstName: 'first_name',
-  lastName: 'last_name',
+  firstName: 'firstName',
+  lastName: 'lastname',
   lastSeen: 'last_seen',
   role: 'user_role',
-  restaurant: 'restaurant',
 };
 
 const getPaginationParams = () => ({
@@ -46,12 +45,17 @@ const getPaginationParams = () => ({
   sortOrder: getQueryParam('sortOrder') || 'asc',
 });
 
+const rolesOutput = {
+  [USER_ROLES.ADMIN]: 'Admin',
+  [USER_ROLES.MANAGER]: 'Manager',
+};
+
 const headCells = [
-  { id: DATA_MODEL.firstName, label: 'First Name', sort: true },
-  { id: DATA_MODEL.lastName, label: 'Last Name', sort: true },
-  { id: DATA_MODEL.restaurant, label: 'Restaurant' },
+  { id: 'firstName', label: 'First Name', sort: true },
+  { id: 'lastName', label: 'Last Name', sort: true },
+  { label: 'Restaurant' },
   { id: DATA_MODEL.role, label: 'User Class' },
-  { id: DATA_MODEL.lastSeen, label: 'Last logged in', sort: true },
+  { id: 'lastLogin', label: 'Last logged in', sort: true },
   { label: 'Actions' },
 ];
 
@@ -74,7 +78,7 @@ class UsersList extends Component {
   }
 
   componentDidMount() {
-    const isSuperAdmin = this.props.auth.user.role === USER_ROLES.ROOT;
+    const isSuperAdmin = this.props.auth.user.permissions.role === USER_ROLES.ROOT;
     this.setState({ isSuperAdmin });
     const paginationParams = getPaginationParams();
 
@@ -116,10 +120,9 @@ class UsersList extends Component {
         data = await UsersService.getUsersList(pageData);
       }
       this.setState({
-        users: data,
+        users: data.result,
         tableLoading: false,
-        // TODO: change to total from response after sync
-        totalUsers: data.length,
+        totalUsers: data.total,
       });
     } catch (error) {
       const { response } = error;
@@ -137,7 +140,7 @@ class UsersList extends Component {
     try {
       const data = await RestaurantsService.getRestaurantsList();
       this.setState({
-        restaurants: data,
+        restaurants: data.map(r => ({ value: r.id, label: r.name })),
         restaurantsLoading: false,
       });
     } catch (error) {
@@ -279,20 +282,24 @@ class UsersList extends Component {
                       {user.first_name}
                     </TableCell>
                     <TableCell>{user.last_name}</TableCell>
-                    <TableCell>{user.restaurant}</TableCell>
-                    <TableCell>{user.role}</TableCell>
-                    <TableCell>{user.last_seen}</TableCell>
+                    <TableCell>{user.restaurant.name}</TableCell>
+                    <TableCell>{rolesOutput[user.role]}</TableCell>
+                    <TableCell>{user.last_login}</TableCell>
                     <TableCell>
-                      <IconButton
-                        onClick={() => this.handleEdit(user.id)}
-                      >
-                        <EditIcon />
-                      </IconButton>
-                      <IconButton
-                        onClick={() => this.handleDelete(user)}
-                      >
-                        <DeleteOutlineIcon />
-                      </IconButton>
+                      { (!isSuperAdmin && user.role === USER_ROLES.ADMIN) ? null :
+                      <React.Fragment>
+                        <IconButton
+                          onClick={() => this.handleEdit(user.id)}
+                        >
+                          <EditIcon />
+                        </IconButton>
+                        <IconButton
+                          onClick={() => this.handleDelete(user)}
+                        >
+                          <DeleteOutlineIcon />
+                        </IconButton>
+                      </React.Fragment>
+                      }
                     </TableCell>
                   </TableRow>
                   ))

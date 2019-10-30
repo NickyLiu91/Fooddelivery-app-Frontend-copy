@@ -27,7 +27,7 @@ export default function Select(props) {
   const styles = selectStyles(theme);
 
   const cleanValue =
-    typeof value === 'string' && value.length && !isMulti
+    typeof ((value === 'string' && value.length) || value === 'number') && !isMulti
       ? data.find(option => option.value === value)
       : value;
 
@@ -65,7 +65,10 @@ Select.propTypes = {
   label: PropTypes.string.isRequired,
   isLoading: PropTypes.bool,
   data: PropTypes.arrayOf(PropTypes.shape({
-    value: PropTypes.string.isRequired,
+    value: PropTypes.oneOfType([
+      PropTypes.string,
+      PropTypes.number,
+    ]).isRequired,
     label: PropTypes.string.isRequired,
   })).isRequired,
   isClearable: PropTypes.bool,

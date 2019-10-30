@@ -59,7 +59,7 @@ class EditUser extends Component {
 
   componentDidMount() {
     const { id } = this.props.match.params;
-    const superAdmin = this.props.auth.user.role === USER_ROLES.ROOT;
+    const superAdmin = this.props.auth.user.permissions.role === USER_ROLES.ROOT;
     if (id || id === 0) {
       this.setState({
         newUser: false,
@@ -83,12 +83,12 @@ class EditUser extends Component {
       this.setState({
         userLoading: false,
         user: {
-          id: data[0].id,
-          firstName: data[0].first_name,
-          lastName: data[0].last_name,
-          email: data[0].email,
-          role: data[0].role,
-          restaurant: data[0].restaurant,
+          id: data.id,
+          firstName: data.first_name,
+          lastName: data.last_name,
+          email: data.email,
+          role: data.role,
+          restaurant: data.restaurant.id,
         },
       });
     } catch (error) {
@@ -103,7 +103,7 @@ class EditUser extends Component {
     try {
       const data = await RestaurantsService.getRestaurantsList();
       this.setState({
-        restaurants: data,
+        restaurants: data.map(r => ({ value: r.id, label: r.name })),
         restaurantsLoading: false,
       });
     } catch (error) {
