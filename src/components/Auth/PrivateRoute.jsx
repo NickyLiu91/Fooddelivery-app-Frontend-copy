@@ -21,13 +21,13 @@ class PrivateRoute extends React.Component {
       return <Redirect to={{ pathname: ROUTES.LOGIN, state: { from: this.props.location } }} />;
     }
 
-    if (permissions && permissions.indexOf(auth.user.role) === -1) {
+    if (permissions && permissions.indexOf(auth.user.permissions.role) === -1) {
       // TODO: check do we need to show 403 page
-      return <Redirect to={{ pathname: defaultRoutes[auth.user.role] }} />;
+      return <Redirect to={{ pathname: defaultRoutes[auth.user.permissions.role] }} />;
     }
 
     if (this.props.path === '/') {
-      return <Redirect to={{ pathname: defaultRoutes[auth.user.role] }} />;
+      return <Redirect to={{ pathname: defaultRoutes[auth.user.permissions.role] }} />;
     }
 
     return <Route {...this.props} />;

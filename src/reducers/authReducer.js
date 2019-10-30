@@ -1,11 +1,13 @@
-import { LOGIN_SUCCESS, LOGOUT } from 'constants/actions/auth';
+import { LOGIN_SUCCESS, LOGOUT, SET_USER } from 'constants/actions/auth';
 
 const initialState = {
   authenticated: false,
   token: null,
   refreshToken: null,
   user: {
-    role: null,
+    permissions: {
+      role: null,
+    },
   },
 };
 
@@ -16,8 +18,12 @@ export default (state = initialState, { type, payload }) => {
         ...state,
         token: payload.token,
         refreshToken: payload.refreshToken,
-        authenticated: true,
+      };
+    case SET_USER:
+      return {
+        ...state,
         user: payload.user,
+        authenticated: true,
       };
     case LOGOUT:
       return state;

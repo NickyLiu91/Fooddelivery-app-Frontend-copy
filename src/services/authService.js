@@ -1,11 +1,15 @@
 import AuthApi from 'sdk/api/authApi';
 import { store } from 'reducers/store';
-import { loginSuccess } from 'actions/authActions';
+import { loginSuccess, setUser } from 'actions/authActions';
+import { UsersApi } from 'sdk/api';
 
 export default class AutService {
-  static async login(data) {
-    const response = await AuthApi.login(data);
+  static async login({ email, password }) {
+    const response = await AuthApi.login({ username: email, password });
     store.dispatch(loginSuccess(response.data.token, response.data.refresh_token));
+    const { data } = await UsersApi.getSelf();
+    store.dispatch(setUser(data));
+    return data;
   }
 
   static async resetPassword(email) {

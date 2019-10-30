@@ -40,7 +40,14 @@ export const authType = shape({
   token: string,
   refreshToken: string,
   user: shape({
-    role: string,
+    id: number,
+    email: string,
+    phone: string,
+    firstName: string,
+    lastName: string,
+    permissions: shape({
+      role: string,
+    }),
   }),
 });
 

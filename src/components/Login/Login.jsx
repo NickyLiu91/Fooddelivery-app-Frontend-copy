@@ -14,10 +14,11 @@ import {
 import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
 
 
-import AuthService from 'services/authService';
+import { AuthService, notifyService } from 'services/';
 import { styles } from './Login.styled';
 import { materialClassesType, routerHistoryType } from 'types';
 import ROUTES from 'constants/routes';
+import { defaultRoutes } from 'routes';
 
 class Login extends Component {
   state = {
@@ -40,12 +41,12 @@ class Login extends Component {
     const { email, password } = this.state.data;
     try {
       this.setState({ loading: true, error: '' });
-      await AuthService.login({ email, password });
-      this.setState({ loading: false });
+      const userData = await AuthService.login({ email, password });
+      this.props.history.push(defaultRoutes[userData.permissions.role]);
     } catch (error) {
       const { response } = error;
+      notifyService.showError(response && response.data && response.data.message ? response.data.message : 'Unknown error');
       this.setState({
-        error: response && response.data && response.data.message ? response.data.message : 'Unknown error',
         loading: false,
       });
     }

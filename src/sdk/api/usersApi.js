@@ -11,6 +11,8 @@ class UsersApi extends Crud {
   }
 
   getUsersForRestaurant = (restaurantId, params) => HttpModel.get(`/${RESTAURANTS_PATH}/${restaurantId}/${USERS_PATH}${formQueryString(params)}`);
+
+  getSelf = () => HttpModel.get(`/${USERS_PATH}/me`);
 }
 
 export default new UsersApi();

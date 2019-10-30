@@ -10,7 +10,9 @@ import {
 } from 'components/';
 
 export const defaultRoutes = {
-  [USER_ROLES.ROOT]: ROUTES.RESTAURANTS_LIST,
+  // TODO: change to restaurant list when it will be ready
+  // [USER_ROLES.ROOT]: ROUTES.RESTAURANTS_LIST,
+  [USER_ROLES.ROOT]: ROUTES.USERS_LIST,
   [USER_ROLES.ADMIN]: ROUTES.RESTAURANTS_DASHBOARD,
   [USER_ROLES.MANAGER]: ROUTES.MANAGE_ORDERS,
 };
