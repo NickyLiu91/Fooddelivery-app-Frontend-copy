@@ -1,5 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
+import { Formik } from 'formik';
+import * as Yup from 'yup';
 import { withStyles } from '@material-ui/styles';
 import {
   Avatar,
@@ -12,63 +14,25 @@ import {
 } from '@material-ui/core';
 import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
 
-
 import AuthService from 'services/authService';
 import { styles } from '../Login.styled';
 import { materialClassesType, routerHistoryType, routerMatchType } from 'types';
 import { notifyService } from 'services';
 import ROUTES from 'constants/routes';
 
+
 class ConfirmPassword extends Component {
-  state = {
-    data: {
-      password: '',
-      confirmPassword: '',
-    },
-    error: null,
-    loading: false,
-  }
-
-  onInputChange = e => {
-    this.setState({
-      data: { ...this.state.data, [e.target.name]: e.target.value },
-    });
-  }
-
-  onSubmit = async e => {
-    e.preventDefault();
-    const { password, confirmPassword } = this.state.data;
+  handleSubmit = async (data, { setSubmitting }) => {
+    const { password } = data;
     const { token } = this.props.match.params;
-    const error = this.validateForm({ password, confirmPassword });
-    this.setState({ error });
-    if (!error) {
-      try {
-        this.setState({ loading: true, error: '' });
-        await AuthService.confirmPassword({ token, password });
-        this.setState({ loading: false });
-        notifyService.showSuccess('Password successfully changed');
-        this.props.history.push(ROUTES.LOGIN);
-      } catch (err) {
-        this.setState({ loading: false });
-        this.handleError(err);
-      }
+    try {
+      await AuthService.confirmPassword({ token, password });
+      notifyService.showSuccess('Password successfully changed');
+      this.props.history.push(ROUTES.LOGIN);
+    } catch (err) {
+      setSubmitting(false);
+      this.handleError(err);
     }
-  }
-
-  validateForm = ({ password, confirmPassword }) => {
-    const minMaxLength = /^[\s\S]{8,20}$/;
-    const letters = /[a-zA-Z]/;
-    const numbers = /[0-9]/;
-
-    if (password !== confirmPassword) return 'Passwords don\'t match';
-    if (!minMaxLength.test(password)) {
-      return 'Password must be at least 8 characters long, but no longer than 20 characters';
-    }
-
-    if (!letters.test(password) || !numbers.test(password)) {
-      return 'Password must contain letters and numbers.';
-    }
-    return null;
   }
 
   handleError = err => {
@@ -83,7 +47,6 @@ class ConfirmPassword extends Component {
   }
 
   render() {
-    const { error, data, loading } = this.state;
     const { classes } = this.props;
 
     return (
@@ -97,46 +60,85 @@ class ConfirmPassword extends Component {
           <Typography component="h1" variant="h5">
             Set New Password
           </Typography>
-          <form className={classes.form} onSubmit={this.onSubmit}>
-            <TextField
-              variant="outlined"
-              margin="normal"
-              required
-              fullWidth
-              name="password"
-              label="Password"
-              value={data.password}
-              onChange={this.onInputChange}
-              type="password"
-              id="password"
-              autoFocus
-            />
-            <TextField
-              variant="outlined"
-              margin="normal"
-              required
-              fullWidth
-              name="confirmPassword"
-              label="Confirm Password"
-              value={data.confirmPassword}
-              onChange={this.onInputChange}
-              type="password"
-              id="confirmPassword"
-            />
-            <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              disabled={loading}
-              color="primary"
-              className={classes.submit}
-            >
-              { loading ? <CircularProgress size={24} /> : 'Set New Password' }
-            </Button>
-            <Typography align="center" color="error">
-              { error }
-            </Typography>
-          </form>
+
+          <Formik
+            initialValues={{
+              password: '',
+              confirmPassword: '',
+            }}
+            onSubmit={this.handleSubmit}
+
+            validationSchema={Yup.object().shape({
+              password: Yup.string()
+                      .min(8, 'Password must contain at least 8 characters')
+                      .max(20, 'Password must be no longer than 20 characters')
+                      .matches(/[a-z]/, 'Password must include at least 1 letter')
+                      .matches(/[0-9]/, 'Password must include at least 1 number')
+                      .required('Password is required'),
+              confirmPassword: Yup.string()
+                      .oneOf([Yup.ref('password'), null], 'Passwords must match')
+                      .required('Confirm Password is required'),
+            })}
+          >
+            {(props) => {
+              const {
+                values,
+                touched,
+                errors,
+                isSubmitting,
+                handleChange,
+                handleBlur,
+                handleSubmit,
+              } = props;
+              return (
+
+                <form className={classes.form} onSubmit={handleSubmit}>
+                  <TextField
+                    variant="outlined"
+                    margin="normal"
+                    required
+                    fullWidth
+                    name="password"
+                    label="Password"
+                    error={errors.password && touched.password}
+                    value={values.password}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    helperText={(errors.password && touched.password) && errors.password}
+                    type="password"
+                    id="password"
+                    autoFocus
+                  />
+                  <TextField
+                    variant="outlined"
+                    margin="normal"
+                    required
+                    fullWidth
+                    name="confirmPassword"
+                    label="Confirm Password"
+                    error={errors.confirmPassword && touched.confirmPassword}
+                    value={values.confirmPassword}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    helperText={(errors.confirmPassword && touched.confirmPassword)
+                      && errors.confirmPassword}
+                    type="password"
+                    id="confirmPassword"
+                  />
+                  <Button
+                    type="submit"
+                    fullWidth
+                    variant="contained"
+                    disabled={isSubmitting}
+                    color="primary"
+                    className={classes.submit}
+                  >
+                    { isSubmitting ? <CircularProgress size={24} /> : 'Set New Password' }
+                  </Button>
+                </form>
+              );
+            }}
+          </Formik>
         </div>
       </Container>
 

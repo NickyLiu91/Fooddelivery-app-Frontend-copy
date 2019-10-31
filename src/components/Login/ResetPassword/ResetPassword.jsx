@@ -1,5 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
+import { Formik } from 'formik';
+import * as Yup from 'yup';
 import { withStyles } from '@material-ui/styles';
 import {
   Avatar,
@@ -20,30 +22,13 @@ import { notifyService } from 'services';
 import ROUTES from 'constants/routes';
 
 class ResetPassword extends Component {
-  state = {
-    data: {
-      email: '',
-    },
-    error: null,
-    loading: false,
-  }
-
-  onInputChange = e => {
-    this.setState({
-      data: { ...this.state.data, [e.target.name]: e.target.value },
-    });
-  }
-
-  onSubmit = async e => {
-    e.preventDefault();
+  handleSubmit = async (data, { setSubmitting }) => {
     try {
-      this.setState({ loading: true, error: '' });
-      await AuthService.resetPassword(this.state.data.email);
-      this.setState({ loading: false });
+      await AuthService.resetPassword(data.email);
       notifyService.showSuccess('We successfully sent you the email with a link to reset password.');
       this.props.history.push(ROUTES.LOGIN);
     } catch (error) {
-      this.setState({ loading: false });
+      setSubmitting(false);
       this.handleError(error);
     }
   }
@@ -60,7 +45,6 @@ class ResetPassword extends Component {
   }
 
   render() {
-    const { error, data, loading } = this.state;
     const { classes } = this.props;
 
     return (
@@ -74,34 +58,60 @@ class ResetPassword extends Component {
           <Typography component="h1" variant="h5">
             Reset Password
           </Typography>
-          <form className={classes.form} onSubmit={this.onSubmit}>
-            <TextField
-              variant="outlined"
-              margin="normal"
-              required
-              fullWidth
-              id="email"
-              label="Email Address"
-              name="email"
-              autoComplete="email"
-              value={data.email}
-              onChange={this.onInputChange}
-              autoFocus
-            />
-            <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              disabled={loading}
-              color="primary"
-              className={classes.submit}
-            >
-              { loading ? <CircularProgress size={24} /> : 'Reset Password' }
-            </Button>
-            <Typography align="center" color="error">
-              { error }
-            </Typography>
-          </form>
+
+          <Formik
+            initialValues={{ email: '' }}
+            onSubmit={this.handleSubmit}
+
+            validationSchema={Yup.object().shape({
+              email: Yup.string()
+                  .email('Email is invalid')
+                  .required('Email is required'),
+          })}
+          >
+            {(props) => {
+              const {
+                values,
+                touched,
+                errors,
+                isSubmitting,
+                handleChange,
+                handleBlur,
+                handleSubmit,
+              } = props;
+              return (
+
+                <form className={classes.form} onSubmit={handleSubmit}>
+                  <TextField
+                    variant="outlined"
+                    margin="normal"
+                    required
+                    fullWidth
+                    id="email"
+                    label="Email Address"
+                    name="email"
+                    autoComplete="email"
+                    error={errors.email && touched.email}
+                    value={values.email}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    helperText={(errors.email && touched.email) && errors.email}
+                    autoFocus
+                  />
+                  <Button
+                    type="submit"
+                    fullWidth
+                    variant="contained"
+                    disabled={isSubmitting}
+                    color="primary"
+                    className={classes.submit}
+                  >
+                    { isSubmitting ? <CircularProgress size={24} /> : 'Reset Password' }
+                  </Button>
+                </form>
+              );
+            }}
+          </Formik>
         </div>
       </Container>
 
