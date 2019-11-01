@@ -66,6 +66,7 @@ class ResetPassword extends Component {
             validationSchema={Yup.object().shape({
               email: Yup.string()
                   .email('Email is invalid')
+                  .max(255, 'Email must be no longer than 255 symbols')
                   .required('Email is required'),
           })}
           >

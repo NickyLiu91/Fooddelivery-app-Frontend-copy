@@ -28,10 +28,13 @@ const validationSchema = superAdmin => (
   Yup.object().shape({
     email: Yup.string()
       .email()
+      .max(255, 'String must be no longer than 255 symbols')
       .required('Required'),
     firstName: Yup.string()
+      .max(255, 'String must be no longer than 255 symbols')
       .required('Required'),
     lastName: Yup.string()
+      .max(255, 'String must be no longer than 255 symbols')
       .required('Required'),
     restaurant: superAdmin ? Yup.string()
       .required('Required') : null,

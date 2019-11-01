@@ -59,6 +59,7 @@ class Login extends Component {
             validationSchema={Yup.object().shape({
               email: Yup.string()
                   .email('Email is invalid')
+                  .max(255, 'Email must be no longer than 255 symbols')
                   .required('Email is required'),
               password: Yup.string()
                   .required('Password is required'),
