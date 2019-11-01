@@ -158,7 +158,7 @@ class EditUser extends Component {
       restaurantsLoading,
       superAdmin,
     } = this.state;
-    const { classes, history } = this.props;
+    const { classes, history, auth } = this.props;
 
     return (
       <Container className={classes.root}>
@@ -167,7 +167,7 @@ class EditUser extends Component {
         </Typography>
         { !userLoading ? (
           <Formik
-            initialValues={{ ...user }}
+            initialValues={{ ...user, restaurant: auth.user.restaurantId }}
             onSubmit={this.handleSubmit}
 
             validationSchema={validationSchema(superAdmin)}
