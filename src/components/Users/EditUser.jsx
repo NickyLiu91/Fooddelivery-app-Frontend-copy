@@ -122,7 +122,6 @@ class EditUser extends Component {
   }
 
   handleSubmit = async (data, { setSubmitting }) => {
-    console.log('[handleSubmit] data', data);
     const { user } = this.props.auth;
     console.log('user', user);
     const { superAdmin, newUser } = this.state;
