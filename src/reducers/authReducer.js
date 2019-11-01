@@ -22,7 +22,10 @@ export default (state = initialState, { type, payload }) => {
     case SET_USER:
       return {
         ...state,
-        user: payload.user,
+        user: {
+          ...payload.user,
+          restaurantId: payload.user.restaurant.id,
+        },
         authenticated: true,
       };
     case LOGOUT:

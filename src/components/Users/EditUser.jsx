@@ -97,6 +97,7 @@ class EditUser extends Component {
   }
 
   getRestaurants = async () => {
+    const { user } = this.props.auth;
     this.setState({
       restaurantsLoading: true,
     });
@@ -105,6 +106,10 @@ class EditUser extends Component {
       this.setState({
         restaurants: data.map(r => ({ value: r.id, label: r.name })),
         restaurantsLoading: false,
+        user: {
+          ...this.state.user,
+          restaurant: user.restaurantId,
+        },
       });
     } catch (error) {
       this.setState({ restaurantsLoading: false });
@@ -115,16 +120,16 @@ class EditUser extends Component {
 
   handleSubmit = async (data, { setSubmitting }) => {
     console.log('[handleSubmit] data', data);
+    const { user } = this.props.auth;
+    console.log('user', user);
     const { superAdmin, newUser } = this.state;
     const userData = {
       first_name: data.firstName,
       last_name: data.lastName,
       email: data.email,
       role: superAdmin ? data.role : USER_ROLES.MANAGER,
+      restaurant: superAdmin ? data.restaurant : user.restaurantId,
     };
-    if (superAdmin) {
-      userData.restaurant = data.restaurant;
-    }
     try {
       if (newUser) {
         await UsersService.addUser(userData);
@@ -208,7 +213,7 @@ class EditUser extends Component {
                     <Grid item md={6}>
                       <TextField
                         error={errors.email && touched.email}
-                        label="email"
+                        label="Email"
                         name="email"
                         value={values.email}
                         onChange={handleChange}
