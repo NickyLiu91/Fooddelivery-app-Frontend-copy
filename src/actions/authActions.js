@@ -1,4 +1,4 @@
-import { LOGIN_SUCCESS, LOGOUT, SET_USER } from 'constants/actions/auth';
+import { LOGIN_SUCCESS, LOGOUT, SET_USER, SET_RESTAURANT } from 'constants/actions/auth';
 
 export const loginSuccess = (token, refreshToken) => ({
   type: LOGIN_SUCCESS,
@@ -12,4 +12,9 @@ export const setUser = user => ({
 
 export const logout = () => ({
   type: LOGOUT,
+});
+
+export const setRestaurant = (id) => ({
+  type: SET_RESTAURANT,
+  payload: { id },
 });

@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { withStyles } from '@material-ui/styles';
+import PropTypes from 'prop-types';
 
 import { UsersService, RestaurantsService, notifyService as notifier } from 'services';
 import { getQueryParam } from 'sdk/utils';
@@ -31,6 +32,8 @@ import { routerHistoryType, materialClassesType, authType } from 'types';
 import { Select, Pagination, TableSort } from 'components/common/';
 import { USER_ROLES } from 'constants/auth';
 import ROUTES from 'constants/routes';
+import { setRestaurant } from 'actions/authActions';
+
 
 const DATA_MODEL = {
   firstName: 'firstName',
@@ -64,7 +67,6 @@ class UsersList extends Component {
     users: [],
     restaurants: [],
     restaurantsLoading: false,
-    restaurant: null,
     sortBy: DATA_MODEL.firstName,
     sortOrder: 'asc',
     page: 0,
@@ -78,7 +80,8 @@ class UsersList extends Component {
   }
 
   componentDidMount() {
-    const isSuperAdmin = this.props.auth.user.permissions.role === USER_ROLES.ROOT;
+    const { user } = this.props.auth;
+    const isSuperAdmin = user.permissions.role === USER_ROLES.ROOT;
     this.setState({ isSuperAdmin });
     const paginationParams = getPaginationParams();
 
@@ -96,15 +99,17 @@ class UsersList extends Component {
     );
   }
 
-  getUsers = async () => {
+  getUsers = async (restaurant) => {
     const {
       rowsPerPage,
       sortBy,
       sortOrder,
       page,
       isSuperAdmin,
-      restaurant,
     } = this.state;
+    const { user } = this.props.auth;
+    const restaurantId = isSuperAdmin && restaurant ? restaurant : user.restaurantId;
+
     this.setState({ tableLoading: true });
     const pageData = {
       limit: rowsPerPage,
@@ -115,7 +120,7 @@ class UsersList extends Component {
     try {
       let data = null;
       if (isSuperAdmin) {
-        data = await UsersService.getUsersForRestaurant(restaurant, pageData);
+        data = await UsersService.getUsersForRestaurant(restaurantId, pageData);
       } else {
         data = await UsersService.getUsersList(pageData);
       }
@@ -134,6 +139,7 @@ class UsersList extends Component {
   }
 
   getRestaurants = async () => {
+    const { restaurantId } = this.props.auth.user;
     this.setState({
       restaurantsLoading: true,
     });
@@ -143,6 +149,7 @@ class UsersList extends Component {
         restaurants: data.map(r => ({ value: r.id, label: r.name })),
         restaurantsLoading: false,
       });
+      if (restaurantId) this.getUsers(restaurantId);
     } catch (error) {
       this.setState({ restaurantsLoading: false });
       const { response } = error;
@@ -152,12 +159,8 @@ class UsersList extends Component {
 
   handleRestaurantChange = (value) => {
     const restaurantId = value ? value.value : null;
-    this.setState(
-      { restaurant: restaurantId },
-      () => {
-        if (restaurantId) this.getUsers();
-      },
-    );
+    this.props.changeRestaurant(restaurantId);
+    if (restaurantId) this.getUsers(restaurantId);
   }
 
   handleSort = (sort) => {
@@ -218,7 +221,6 @@ class UsersList extends Component {
       tableLoading,
       restaurantsLoading,
       restaurants,
-      restaurant,
       totalUsers,
       isSuperAdmin,
       deleteModalOpen,
@@ -226,6 +228,7 @@ class UsersList extends Component {
       deleting,
     } = this.state;
     const { classes } = this.props;
+    const restaurant = this.props.auth.user.restaurantId;
 
     return (
       <Container className={classes.root}>
@@ -238,6 +241,7 @@ class UsersList extends Component {
               <Select
                 isLoading={restaurantsLoading}
                 data={restaurants}
+                value={restaurant}
                 label="Restaurant"
                 placeholder="Select Restaurant"
                 onChange={this.handleRestaurantChange}
@@ -358,10 +362,15 @@ UsersList.propTypes = {
   history: routerHistoryType.isRequired,
   classes: materialClassesType.isRequired,
   auth: authType.isRequired,
+  changeRestaurant: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = state => ({
   auth: state.auth,
 });
 
-export default connect(mapStateToProps, null)(withStyles(listStyles)(UsersList));
+const mapDispatchToProps = dispatch => ({
+  changeRestaurant: id => dispatch(setRestaurant(id)),
+});
+
+export default connect(mapStateToProps, mapDispatchToProps)(withStyles(listStyles)(UsersList));

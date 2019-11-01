@@ -1,10 +1,11 @@
-import { LOGIN_SUCCESS, LOGOUT, SET_USER } from 'constants/actions/auth';
+import { LOGIN_SUCCESS, LOGOUT, SET_USER, SET_RESTAURANT } from 'constants/actions/auth';
 
 const initialState = {
   authenticated: false,
   token: null,
   refreshToken: null,
   user: {
+    restaurantId: null,
     permissions: {
       role: null,
     },
@@ -24,7 +25,16 @@ export default (state = initialState, { type, payload }) => {
         ...state,
         user: {
           ...payload.user,
-          restaurantId: payload.user.restaurant.id,
+          restaurantId: payload.user.restaurant ? payload.user.restaurant.id : null,
+        },
+        authenticated: true,
+      };
+    case SET_RESTAURANT:
+      return {
+        ...state,
+        user: {
+          ...state.user,
+          restaurantId: payload.id,
         },
         authenticated: true,
       };
