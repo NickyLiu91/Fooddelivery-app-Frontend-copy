@@ -7,13 +7,13 @@ import { updateQueryParams } from 'sdk/utils';
 
 function Pagination(props) {
   const {
-    page,
     rowsPerPage,
     totalRows,
     disabled,
     onChange,
     history,
   } = props;
+  let { page } = props;
 
   const handleChangePage = (event, newPage) => {
     if (!disabled) {
@@ -38,7 +38,8 @@ function Pagination(props) {
     }
   };
 
-  if (page > 0 && totalRows === 0) {
+  if (page > 0 && totalRows && rowsPerPage >= totalRows) {
+    page = 0;
     handleChangePage(null, 0);
   }
 
