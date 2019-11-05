@@ -1,0 +1,86 @@
+stages:
+    - build
+    - deploy
+
+cache:
+    key: ${CI_COMMIT_REF_SLUG}
+    paths:
+        - node_modules
+
+build:
+    stage: build
+    script:
+        - 'npm install'
+        - 'npm run lint'
+        - 'npm run build'
+    artifacts:
+        paths:
+            - ./build
+    only:
+        refs:
+            - /^v\d+.\d+.\d+$/
+    tags:
+        - node10
+
+DEV:
+    stage: deploy
+    variables:
+        AWS_S3_BUCKET: ${DEV_AWS_S3_BUCKET}
+        REACT_APP_API_URL: ${DEV_REACT_APP_API_URL}
+    before_script:
+        - apt-get update
+        - apt-get -y install python3-pip
+        - pip3 install awscli
+    script:
+        - 'npm run configure'
+        - 'aws s3 sync ./build/ s3://${AWS_S3_BUCKET}/ --cache-control "max-age=31536000,public" --delete'
+    dependencies:
+        - build
+    only:
+        refs:
+            - /^v\d+.\d+.\d+$/
+    when: manual
+    tags:
+        - node10
+
+QA:
+    stage: deploy
+    variables:
+        AWS_S3_BUCKET: ${QA_AWS_S3_BUCKET}
+        REACT_APP_API_URL: ${QA_REACT_APP_API_URL}
+    before_script:
+        - apt-get update
+        - apt-get -y install python3-pip
+        - pip3 install awscli
+    script:
+        - 'npm run configure'
+        - 'aws s3 sync ./build/ s3://${AWS_S3_BUCKET}/ --cache-control "max-age=31536000,public" --delete'
+    dependencies:
+        - build
+    only:
+        refs:
+            - /^v\d+.\d+.\d+$/
+    when: manual
+    tags:
+        - node10
+
+STAGE:
+    stage: deploy
+    variables:
+        AWS_S3_BUCKET: ${STAGE_AWS_S3_BUCKET}
+        REACT_APP_API_URL: ${STAGE_REACT_APP_API_URL}
+    before_script:
+        - apt-get update
+        - apt-get -y install python3-pip
+        - pip3 install awscli
+    script:
+        - 'npm run configure'
+        - 'aws s3 sync ./build/ s3://${AWS_S3_BUCKET}/ --cache-control "max-age=31536000,public" --delete'
+    dependencies:
+        - build
+    only:
+        refs:
+            - /^v\d+.\d+.\d+$/
+    when: manual
+    tags:
+        - node10

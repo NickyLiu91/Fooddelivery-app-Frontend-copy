@@ -1,0 +1,53 @@
+{
+  "name": "fos-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@material-ui/core": "^4.5.0",
+    "@material-ui/icons": "^4.4.3",
+    "@material-ui/styles": "^4.5.0",
+    "axios": "^0.19.0",
+    "clsx": "^1.0.4",
+    "formik": "^1.5.8",
+    "jwt-decode": "^2.2.0",
+    "lodash": "^4.17.15",
+    "notistack": "^0.8.9",
+    "prop-types": "^15.7.2",
+    "react": "^16.9.0",
+    "react-dom": "^16.9.0",
+    "react-redux": "^7.1.1",
+    "react-router-dom": "^5.1.2",
+    "react-scripts": "3.1.2",
+    "react-select": "^3.0.8",
+    "redux": "^4.0.4",
+    "redux-persist": "^6.0.0",
+    "redux-thunk": "^2.3.0",
+    "typeface-roboto": "^0.0.75",
+    "yup": "^0.27.0"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "configure": "node scripts/configure.js",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "lint": "eslint --ext=js --ext=jsx ./src --fix",
+    "lint-report": "eslint --ext=js --ext=jsx ./src -f html -o ./build/reports/eslint.html"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "axios-mock-adapter": "^1.17.0",
+    "eslint-config-airbnb": "^16.0.1"
+  }
+}
