@@ -4,6 +4,7 @@ import {
 } from 'prop-types';
 import { Route, Switch } from 'react-router-dom';
 import PrivateRoute from 'components/Auth/PrivateRoute';
+import NotFound from 'pages/noAccessPages/NotFound';
 
 const Routes = ({ routes, ...propsFromWrapper }) => (
   <Switch>
@@ -30,6 +31,7 @@ const Routes = ({ routes, ...propsFromWrapper }) => (
           />
         ));
     })}
+    <Route component={NotFound} />
   </Switch>
 );
 

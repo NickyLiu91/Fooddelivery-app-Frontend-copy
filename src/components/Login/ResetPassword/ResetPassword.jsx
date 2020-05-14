@@ -36,8 +36,8 @@ class ResetPassword extends Component {
   handleError = err => {
     console.log('err', err);
     const { response } = err;
-    if (response && response.data && response.data.error) {
-      notifyService.showError(response.data.error.message);
+    if (response && response.data && response.data.message) {
+      notifyService.showError(response.data.message);
       this.props.history.push(ROUTES.LOGIN);
     } else {
       notifyService.showError('Unknown error');

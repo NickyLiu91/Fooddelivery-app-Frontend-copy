@@ -35,6 +35,7 @@ export default function TableSort(props) {
           <TableCell
             key={headCell.label}
             sortDirection={orderBy === headCell.id ? order : false}
+            style={{ fontWeight: 600 }}
           >
             { headCell.sort ? (
               <TableSortLabel
@@ -56,7 +57,7 @@ export default function TableSort(props) {
 }
 
 TableSort.propTypes = {
-  onSort: PropTypes.func.isRequired,
+  onSort: PropTypes.func,
   order: PropTypes.oneOf(['asc', 'desc']).isRequired,
   orderBy: PropTypes.string.isRequired,
   disabled: PropTypes.bool,
@@ -69,6 +70,7 @@ TableSort.propTypes = {
 };
 
 TableSort.defaultProps = {
+  onSort: () => {},
   disabled: false,
   history: null,
 };

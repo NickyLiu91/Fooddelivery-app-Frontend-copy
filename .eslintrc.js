@@ -23,6 +23,8 @@ module.exports = {
     'import/prefer-default-export': 0,
     'import/extensions': 0,
     'react/no-did-mount-set-state': 0,
+    'no-confusing-arrow': 0,
+    'import/no-extraneous-dependencies': 0,
   },
   'settings': {
     'import/resolver': {

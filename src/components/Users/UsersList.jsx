@@ -4,7 +4,7 @@ import { withStyles } from '@material-ui/styles';
 import PropTypes from 'prop-types';
 
 import { UsersService, RestaurantsService, notifyService as notifier } from 'services';
-import { getQueryParam } from 'sdk/utils';
+import { getQueryParam, updateQueryParams, getErrorMessage } from 'sdk/utils';
 
 import {
   Table,
@@ -33,6 +33,8 @@ import { Select, Pagination, TableSort } from 'components/common/';
 import { USER_ROLES } from 'constants/auth';
 import ROUTES from 'constants/routes';
 import { setRestaurant } from 'actions/authActions';
+import DefaultLayout from 'components/Layouts/DefaultLayout';
+import moment from 'moment';
 
 
 const DATA_MODEL = {
@@ -57,7 +59,7 @@ const headCells = [
   { id: 'firstName', label: 'First Name', sort: true },
   { id: 'lastName', label: 'Last Name', sort: true },
   { label: 'Restaurant' },
-  { id: DATA_MODEL.role, label: 'User Class' },
+  { id: DATA_MODEL.role, label: 'User Role' },
   { id: 'lastLogin', label: 'Last logged in', sort: true },
   { label: 'Actions' },
 ];
@@ -81,7 +83,7 @@ class UsersList extends Component {
 
   componentDidMount() {
     const { user } = this.props.auth;
-    const isSuperAdmin = user.permissions.role === USER_ROLES.ROOT;
+    const isSuperAdmin = user.role === USER_ROLES.ROOT;
     this.setState({ isSuperAdmin });
     const paginationParams = getPaginationParams();
 
@@ -108,7 +110,8 @@ class UsersList extends Component {
       isSuperAdmin,
     } = this.state;
     const { user } = this.props.auth;
-    const restaurantId = isSuperAdmin && restaurant ? restaurant : user.restaurantId;
+    const restaurantId = isSuperAdmin && restaurant ? restaurant : user.restaurant.id;
+    if (!restaurantId) return;
 
     this.setState({ tableLoading: true });
     const pageData = {
@@ -130,37 +133,40 @@ class UsersList extends Component {
         totalUsers: data.total,
       });
     } catch (error) {
-      const { response } = error;
+      console.log('[getUsers] error', error);
       this.setState({
         tableLoading: false,
       });
-      notifier.showError(response && response.data && response.data.message ? response.data.message : 'Unknown error');
+      notifier.showError(getErrorMessage(error));
     }
   }
 
   getRestaurants = async () => {
-    const { restaurantId } = this.props.auth.user;
+    const restaurantId = this.props.auth.user.restaurant.id;
     this.setState({
       restaurantsLoading: true,
     });
     try {
       const data = await RestaurantsService.getRestaurantsList();
       this.setState({
-        restaurants: data.map(r => ({ value: r.id, label: r.name })),
+        restaurants: data,
         restaurantsLoading: false,
       });
-      if (restaurantId) this.getUsers(restaurantId);
+      this.getUsers(restaurantId);
     } catch (error) {
+      console.log('[getRestaurants] error', error);
       this.setState({ restaurantsLoading: false });
-      const { response } = error;
-      notifier.showError(response && response.data && response.data.message ? response.data.message : 'Unknown error');
+      notifier.showError(getErrorMessage(error));
     }
   }
 
-  handleRestaurantChange = (value) => {
-    const restaurantId = value ? value.value : null;
-    this.props.changeRestaurant(restaurantId);
-    if (restaurantId) this.getUsers(restaurantId);
+  handleRestaurantChange = (restaurant) => {
+    this.props.history.push(updateQueryParams({ page: 0 }));
+    this.props.changeRestaurant(restaurant);
+    this.setState(
+      { page: 0 },
+      () => { this.getUsers(restaurant.id); },
+    );
   }
 
   handleSort = (sort) => {
@@ -198,9 +204,8 @@ class UsersList extends Component {
       this.getUsers();
     } catch (error) {
       this.setState({ deleting: false });
-      console.log('error', error);
-      const { response } = error;
-      notifier.showError(response && response.data && response.data.message ? response.data.message : 'Unknown error');
+      console.log('[handleDeleteConfirm] error', error);
+      notifier.showError(getErrorMessage(error));
     }
   }
 
@@ -228,132 +233,137 @@ class UsersList extends Component {
       deleting,
     } = this.state;
     const { classes } = this.props;
-    const restaurant = this.props.auth.user.restaurantId;
+    const { restaurant } = this.props.auth.user;
 
     return (
-      <Container className={classes.root}>
-        <Typography variant="h4">
-          Manage Users
-        </Typography>
-        <Grid container spacing={3}>
-          <Grid item md={6}>
-            { isSuperAdmin && (
-              <Select
-                isLoading={restaurantsLoading}
-                data={restaurants}
-                value={restaurant}
-                label="Restaurant"
-                placeholder="Select Restaurant"
-                onChange={this.handleRestaurantChange}
-              />
-            )}
+      <DefaultLayout>
+        <Container>
+          <Typography variant="h4">
+            Manage Users
+          </Typography>
+          <Grid container spacing={3}>
+            <Grid item md={6}>
+              { isSuperAdmin && (
+                <Select
+                  isLoading={restaurantsLoading}
+                  data={restaurants}
+                  value={restaurant.id}
+                  label="Restaurant"
+                  placeholder="Select Restaurant"
+                  onChange={this.handleRestaurantChange}
+                  getOptionValue={r => r.id}
+                  getOptionLabel={r => r.name}
+                  optionValue="id"
+                />
+              )}
+            </Grid>
+            <Grid item md={6}>
+              <Typography align="right">
+                <Button
+                  variant="contained"
+                  color="primary"
+                  size="large"
+                  onClick={() => this.handleAdd()}
+                >
+                  Create User
+                </Button>
+              </Typography>
+            </Grid>
           </Grid>
-          <Grid item md={6}>
-            <Typography align="right">
-              <Button
-                variant="contained"
-                color="primary"
-                size="large"
-                onClick={() => this.handleAdd()}
-              >
-                Create User
-              </Button>
-            </Typography>
-          </Grid>
-        </Grid>
-        { !isSuperAdmin || restaurant ? (
-          <Paper className={classes.tableContainer}>
-            <Table className={classes.table}>
-              <TableSort
-                onSort={this.handleSort}
-                order={sortOrder}
-                orderBy={sortBy}
-                disabled={tableLoading}
-                cells={headCells}
-                defaultSortProp={DATA_MODEL.firstName}
+          { !isSuperAdmin || restaurant.id ? (
+            <Paper className={classes.tableContainer}>
+              <Table className={classes.table}>
+                <TableSort
+                  onSort={this.handleSort}
+                  order={sortOrder}
+                  orderBy={sortBy}
+                  disabled={tableLoading}
+                  cells={headCells}
+                  defaultSortProp={DATA_MODEL.firstName}
+                  history={this.props.history}
+                />
+                <TableBody>
+                  { tableLoading ? (
+                    <TableRow>
+                      <TableCell colSpan={6} align="center">
+                        <CircularProgress />
+                      </TableCell>
+                    </TableRow>
+                  ) : users.map(user => (
+                    <TableRow key={user.id}>
+                      <TableCell component="th" scope="row">
+                        {user.first_name}
+                      </TableCell>
+                      <TableCell>{user.last_name}</TableCell>
+                      <TableCell>{user.restaurant.name}</TableCell>
+                      <TableCell>{rolesOutput[user.role]}</TableCell>
+                      <TableCell>{user.last_login && moment.utc(user.last_login).local().format('YYYY-MM-DD hh:mm a')}</TableCell>
+                      <TableCell className={classes.actionsBlock}>
+                        { (!isSuperAdmin && user.role === USER_ROLES.ADMIN) ? null :
+                        <React.Fragment>
+                          <IconButton
+                            onClick={() => this.handleEdit(user.id)}
+                          >
+                            <EditIcon />
+                          </IconButton>
+                          <IconButton
+                            onClick={() => this.handleDelete(user)}
+                          >
+                            <DeleteOutlineIcon />
+                          </IconButton>
+                        </React.Fragment>
+                        }
+                      </TableCell>
+                    </TableRow>
+                    ))
+                  }
+                </TableBody>
+              </Table>
+              <Pagination
+                rowsPerPage={rowsPerPage}
+                page={page}
+                onChange={this.handlePaginationChange}
+                totalRows={totalUsers}
                 history={this.props.history}
               />
-              <TableBody>
-                { tableLoading ? (
-                  <TableRow>
-                    <TableCell colSpan={6} align="center">
-                      <CircularProgress />
-                    </TableCell>
-                  </TableRow>
-                ) : users.map(user => (
-                  <TableRow key={user.id}>
-                    <TableCell component="th" scope="row">
-                      {user.first_name}
-                    </TableCell>
-                    <TableCell>{user.last_name}</TableCell>
-                    <TableCell>{user.restaurant.name}</TableCell>
-                    <TableCell>{rolesOutput[user.role]}</TableCell>
-                    <TableCell>{user.last_login}</TableCell>
-                    <TableCell>
-                      { (!isSuperAdmin && user.role === USER_ROLES.ADMIN) ? null :
-                      <React.Fragment>
-                        <IconButton
-                          onClick={() => this.handleEdit(user.id)}
-                        >
-                          <EditIcon />
-                        </IconButton>
-                        <IconButton
-                          onClick={() => this.handleDelete(user)}
-                        >
-                          <DeleteOutlineIcon />
-                        </IconButton>
-                      </React.Fragment>
-                      }
-                    </TableCell>
-                  </TableRow>
-                  ))
-                }
-              </TableBody>
-            </Table>
-            <Pagination
-              rowsPerPage={rowsPerPage}
-              page={page}
-              onChange={this.handlePaginationChange}
-              totalRows={totalUsers}
-              history={this.props.history}
-            />
-          </Paper>
-        ) : (
-          <Typography variant="h5" className={classes.emptyRestaurantMessage}>
-            Please select restaurant to get users list.
-          </Typography>
-        )}
+            </Paper>
+          ) : (
+            <Typography variant="h5" className={classes.emptyRestaurantMessage}>
+              Please select restaurant to get users list.
+            </Typography>
+          )}
 
-        <Dialog
-          open={deleteModalOpen}
-          onClose={this.handleDeleteModalClose}
-          aria-labelledby="alert-dialog-title"
-          aria-describedby="alert-dialog-description"
-        >
-          <DialogTitle id="alert-dialog-title">Delete user</DialogTitle>
-          <DialogContent>
-            <DialogContentText id="alert-dialog-description">
-              Do you really want to delete { `${userToDelete && userToDelete.first_name} ${userToDelete && userToDelete.last_name}` } ? This action can not be undone.
-            </DialogContentText>
-          </DialogContent>
-          <DialogActions>
-            <Button
-              onClick={this.handleDeleteModalClose}
-              color="primary"
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={this.handleDeleteConfirm}
-              color="primary"
-              autoFocus
-              disabled={deleting}
-            >
-              { deleting ? <CircularProgress size={24} /> : 'Confirm'}
-            </Button>
-          </DialogActions>
-        </Dialog>
-      </Container>
+          <Dialog
+            open={deleteModalOpen}
+            onClose={this.handleDeleteModalClose}
+            aria-labelledby="alert-dialog-title"
+            aria-describedby="alert-dialog-description"
+          >
+            <DialogTitle id="alert-dialog-title">Delete user</DialogTitle>
+            <DialogContent>
+              <DialogContentText id="alert-dialog-description">
+                Do you really want to delete { `${userToDelete && userToDelete.first_name} ${userToDelete && userToDelete.last_name}` } ? This action can not be undone.
+              </DialogContentText>
+            </DialogContent>
+            <DialogActions>
+              <Button
+                onClick={this.handleDeleteModalClose}
+                color="primary"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={this.handleDeleteConfirm}
+                color="primary"
+                autoFocus
+                disabled={deleting}
+              >
+                { deleting ? <CircularProgress size={24} /> : 'Confirm'}
+              </Button>
+            </DialogActions>
+          </Dialog>
+        </Container>
+      </DefaultLayout>
     );
   }
 }

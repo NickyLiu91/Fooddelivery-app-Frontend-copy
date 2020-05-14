@@ -13,6 +13,8 @@ build:
         - 'npm install'
         - 'npm run lint'
         - 'npm run build'
+        - 'scp build.txt.tpl build/build.txt'
+        - 'sed -i -e "s/##CI_JOB_ID##/${CI_JOB_ID}/; s/##CI_COMMIT_REF_NAME##/${CI_COMMIT_REF_NAME}/; s/##DATE##/$(date)/" ./build/build.txt'
     artifacts:
         paths:
             - ./build
@@ -27,6 +29,9 @@ DEV:
     variables:
         AWS_S3_BUCKET: ${DEV_AWS_S3_BUCKET}
         REACT_APP_API_URL: ${DEV_REACT_APP_API_URL}
+        REACT_APP_GOOGLE_MAPS_API_KEY: ${DEV_REACT_APP_GOOGLE_MAPS_API_KEY}
+        REACT_APP_SOCKET_URL: ${DEV_REACT_APP_SOCKET_URL}
+        CDN_DISTRIBUTION_ID: ${DEV_CDN_DISTRIBUTION_ID}
     before_script:
         - apt-get update
         - apt-get -y install python3-pip
@@ -34,6 +39,9 @@ DEV:
     script:
         - 'npm run configure'
         - 'aws s3 sync ./build/ s3://${AWS_S3_BUCKET}/ --cache-control "max-age=31536000,public" --delete'
+        - 'aws s3 cp ./build/index.html s3://${AWS_S3_BUCKET}/index.html --acl public-read --cache-control "max-age=0,private,must-revalidate,no-store,no-cache"'
+        - 'aws s3 cp ./build/env.js s3://${AWS_S3_BUCKET}/env.js --acl public-read --cache-control "max-age=0,private,must-revalidate,no-store,no-cache"'
+        - 'aws cloudfront create-invalidation --distribution-id ${CDN_DISTRIBUTION_ID} --paths /index.html /env.js /build.txt'
     dependencies:
         - build
     only:
@@ -48,6 +56,9 @@ QA:
     variables:
         AWS_S3_BUCKET: ${QA_AWS_S3_BUCKET}
         REACT_APP_API_URL: ${QA_REACT_APP_API_URL}
+        REACT_APP_GOOGLE_MAPS_API_KEY: ${QA_REACT_APP_GOOGLE_MAPS_API_KEY}
+        REACT_APP_SOCKET_URL: ${QA_REACT_APP_SOCKET_URL}
+        CDN_DISTRIBUTION_ID: ${QA_CDN_DISTRIBUTION_ID}
     before_script:
         - apt-get update
         - apt-get -y install python3-pip
@@ -55,6 +66,9 @@ QA:
     script:
         - 'npm run configure'
         - 'aws s3 sync ./build/ s3://${AWS_S3_BUCKET}/ --cache-control "max-age=31536000,public" --delete'
+        - 'aws s3 cp ./build/index.html s3://${AWS_S3_BUCKET}/index.html --acl public-read --cache-control "max-age=0,private,must-revalidate,no-store,no-cache"'
+        - 'aws s3 cp ./build/env.js s3://${AWS_S3_BUCKET}/env.js --acl public-read --cache-control "max-age=0,private,must-revalidate,no-store,no-cache"'
+        - 'aws cloudfront create-invalidation --distribution-id ${CDN_DISTRIBUTION_ID} --paths /index.html /env.js /build.txt'
     dependencies:
         - build
     only:
@@ -69,6 +83,9 @@ STAGE:
     variables:
         AWS_S3_BUCKET: ${STAGE_AWS_S3_BUCKET}
         REACT_APP_API_URL: ${STAGE_REACT_APP_API_URL}
+        REACT_APP_GOOGLE_MAPS_API_KEY: ${STAGE_REACT_APP_GOOGLE_MAPS_API_KEY}
+        REACT_APP_SOCKET_URL: ${STAGE_REACT_APP_SOCKET_URL}
+        CDN_DISTRIBUTION_ID: ${STAGE_CDN_DISTRIBUTION_ID}
     before_script:
         - apt-get update
         - apt-get -y install python3-pip
@@ -76,6 +93,9 @@ STAGE:
     script:
         - 'npm run configure'
         - 'aws s3 sync ./build/ s3://${AWS_S3_BUCKET}/ --cache-control "max-age=31536000,public" --delete'
+        - 'aws s3 cp ./build/index.html s3://${AWS_S3_BUCKET}/index.html --acl public-read --cache-control "max-age=0,private,must-revalidate,no-store,no-cache"'
+        - 'aws s3 cp ./build/env.js s3://${AWS_S3_BUCKET}/env.js --acl public-read --cache-control "max-age=0,private,must-revalidate,no-store,no-cache"'
+        - 'aws cloudfront create-invalidation --distribution-id ${CDN_DISTRIBUTION_ID} --paths /index.html /env.js /build.txt'
     dependencies:
         - build
     only:

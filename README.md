@@ -1,5 +1,15 @@
 # Food Delivery Frontend Application
 
+### Environment variables
+
+| Environment Variable                | Example of value                                       | Description                                            |
+| ----------------------------------- | ------------------------------------------------------ | ------------------------------------------------------ |
+| REACT_APP_API_URL                   | https://food-delievery-api.com/api/v1                  | API Url                                                |
+| REACT_APP_SOCKET_URL                | https://food-delievery-socket.com/api/v1               | Socket Url                                             |
+| REACT_APP_GOOGLE_MAPS_API_KEY       | AIzaSsaD2as7TaJfs-rmA-zUkr091231l7h                    | Google maps API key                                    |
+| NODE_PATH                           | src/                                                   | Source root path to enable absolute paths in imports   |
+
+
 ### Installation
 
 1. Clone a repository: 
@@ -12,13 +22,13 @@
 
    ```
    $ cd food-delivery-frontend
-   $ yarn
+   $ npm i
    ```
 
 3. Start the development server: 
 
    ```
-   $ yarn start
+   $ npm run start
    ```
    
 4. Set line separators

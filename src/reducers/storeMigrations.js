@@ -10,6 +10,41 @@ const migrations = {
     ...state,
     auth: {},
   }),
+  2: state => ({
+    ...state,
+    auth: {},
+  }),
+  3: state => ({
+    ...state,
+    auth: {},
+  }),
+  4: state => ({
+    ...state,
+    auth: {
+      authenticated: false,
+    },
+  }),
+  5: state => ({
+    ...state,
+    auth: {
+      authenticated: false,
+    },
+  }),
+  6: state => ({
+    ...state,
+    auth: {
+      authenticated: false,
+    },
+  }),
+  7: state => ({
+    ...state,
+    auth: {
+      authenticated: false,
+      user: {
+        restaurant: {},
+      },
+    },
+  }),
 };
 
 const lastVersion = Object.keys(migrations)[Object.keys(migrations).length - 1];

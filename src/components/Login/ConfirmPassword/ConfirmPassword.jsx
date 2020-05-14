@@ -38,8 +38,8 @@ class ConfirmPassword extends Component {
   handleError = err => {
     console.log('err', err);
     const { response } = err;
-    if (response && response.data && response.data.error) {
-      notifyService.showError(response.data.error.message);
+    if (response && response.data && response.data.message) {
+      notifyService.showError(response.data.message);
       this.props.history.push(ROUTES.LOGIN);
     } else {
       notifyService.showError('Unknown error');
@@ -72,7 +72,7 @@ class ConfirmPassword extends Component {
               password: Yup.string()
                       .min(8, 'Password must contain at least 8 characters')
                       .max(20, 'Password must be no longer than 20 characters')
-                      .matches(/[a-z]/, 'Password must include at least 1 letter')
+                      .matches(/[a-zA-Z]/, 'Password must include at least 1 letter')
                       .matches(/[0-9]/, 'Password must include at least 1 number')
                       .required('Password is required'),
               confirmPassword: Yup.string()
@@ -96,7 +96,6 @@ class ConfirmPassword extends Component {
                   <TextField
                     variant="outlined"
                     margin="normal"
-                    required
                     fullWidth
                     name="password"
                     label="Password"
@@ -112,7 +111,6 @@ class ConfirmPassword extends Component {
                   <TextField
                     variant="outlined"
                     margin="normal"
-                    required
                     fullWidth
                     name="confirmPassword"
                     label="Confirm Password"

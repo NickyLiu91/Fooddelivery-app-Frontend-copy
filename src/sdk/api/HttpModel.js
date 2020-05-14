@@ -1,78 +1,23 @@
 import axios from 'axios';
 // eslint-disable-next-line import/no-extraneous-dependencies
-// import MockAdapter from 'axios-mock-adapter';
 
 import { store } from 'reducers/store';
-import { loginSuccess } from 'actions/authActions';
 import { HTTP } from 'constants/http';
 import ENV from 'config/env';
+import history from 'browserHistory';
+import ROUTES from 'constants/routes';
 // import { fakeUsersList, fakeSelectData, fakeSelfData, fakeHours } from './mockData';
+import { AUTH_PATH } from 'constants/apiPaths';
+import RefreshTokenApi from './RefreshTokenApi';
 
-// TODO: setup environment
 export const BASE_URL = ENV.REACT_APP_API_URL;
-
-// Temporary mock API
-// export const mock = new MockAdapter(axios, { delayResponse: 700 });
-// mock
-//   .onPost(`${BASE_URL}/auth/email/login`).replyOnce(200, {
-// eslint-disable-next-line max-len
-//     token: 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiUk9MRV9TVVBFUl9BRE1JTiIsImp0aSI6ImZmOWQ5MzY0LWI2YmQtNDUzNC04YjY5LWM0ZTc3NDRhMzA5YSIsImlhdCI6MTU3MDcwOTUyMCwiZXhwIjoxNTcwNzEzMTIwfQ.KfUBPaKYtOoTF5lSv4kCeoYI5VkeIQ5s2vMg5PAs_yw',
-//     refresh_token: 'xxx00a7a9e970f9bbe076e05743....',
-//   })
-//   .onPost(`${BASE_URL}/auth/email/login`).replyOnce(HTTP.UNAUTHORIZED, {
-//     message: 'UNAUTHORIZED',
-//   })
-//   .onPost(`${BASE_URL}/auth/email/login`)
-//   .replyOnce(HTTP.FORBIDDEN, {
-//     message: "Email doesn't exist",
-//   });
-
-// mock
-//   .onPost(`${BASE_URL}/auth/email/refresh`).reply(200, {
-//     token: 'new_eyJ0eXAiOiJKV1QiLCJhbG...',
-//     refresh_token: 'new_xxx00a7a9e970f9bbe076e05743....',
-//   });
-
-// // const usersPath = `${BASE_URL}/users`;
-// // const usersUrl = new RegExp(`${usersPath}*`);
-
-// // const usersRestaurantPath = `${BASE_URL}/restaurants`;
-// // const usersRestaurantUrl = new RegExp(`${usersRestaurantPath}/.*/users*`);
-
-// // mock.onGet(usersUrl).reply(200, fakeUsersList);
-// // mock.onPost(usersUrl).reply(200);
-// // mock.onPut(usersUrl).reply(200);
-// // mock.onDelete(usersUrl).reply(200);
-// // mock.onGet(usersRestaurantUrl).reply(200, fakeUsersList.slice(0, 6));
-// mock.onGet(`${BASE_URL}/users/me`).reply(200, fakeSelfData);
-// mock.onGet(`${BASE_URL}/hours`).reply(200, fakeHours);
-// mock.onGet(`${BASE_URL}/restaurants`).reply(200, fakeSelectData);
-// mock.onPost(`${BASE_URL}/auth/email/reset`).reply(200, fakeSelectData);
-// mock.onPost(`${BASE_URL}/auth/email/confirm`).reply(200);
-// mock
-//   .onPost(`${BASE_URL}/auth/email/reset`).reply(403, {
-//     message: 'Error during sending the request',
-//     errors: {
-//       email: 'Invalid field value',
-//     },
-//   });
-// mock
-//   .onPost(`${BASE_URL}/auth/email/confirm`).reply(403, {
-//     message: 'Error during sending the request',
-//     errors: {
-//       new_pas: 'Invalid field value',
-//     },
-//   });
-
 
 class Http {
   constructor() {
     this.client = axios.create();
-    this.refreshRequest = null;
 
     this.client.interceptors.request.use(
       (config) => {
-        console.log('[API request] config:', config);
         if (!store.getState().auth.token) {
           return config;
         }
@@ -91,25 +36,25 @@ class Http {
     this.client.interceptors.response.use(
       r => r,
       async error => {
-        console.log('error', error.response);
+        console.log('[interceptors.response] error', error.response);
         if (
           !store.getState().auth.authenticated
+          || !error.response
           || error.response.status !== HTTP.UNAUTHORIZED
-          || error.response.config.url === `${BASE_URL}/auth/email/login`
+          || error.response.config.url === `${BASE_URL}${AUTH_PATH}/login`
+          || error.response.config.url === `${BASE_URL}/security/refresh`
           || error.config.retryAuth
         ) {
+          if (error.response.status === HTTP.FORBIDDEN) {
+            history.replace(ROUTES.ACCESS_DENIED);
+          } else if (error.response.status === HTTP.NOT_FOUND) {
+            history.replace(ROUTES.NOT_FOUND);
+          }
           throw error;
         }
 
-        if (!this.refreshRequest) {
-          this.refreshRequest = this.client.post(`${BASE_URL}/auth/email/refresh`, {
-            refresh_token: store.getState().auth.refreshToken,
-          });
-        }
+        await RefreshTokenApi.refresh();
 
-        const { data } = await this.refreshRequest;
-        this.refreshRequest = null;
-        store.dispatch(loginSuccess(data.token, data.refresh_token));
         const newRequest = {
           ...error.config,
           retryAuth: true,
@@ -122,6 +67,14 @@ class Http {
 
   get(path) {
     return this.client.get(`${BASE_URL}${path}`);
+  }
+
+  getFile(path) {
+    return this.client.request({
+      method: 'GET',
+      url: `${BASE_URL}${path}`,
+      responseType: 'blob',
+    });
   }
 
   post(path, payload) {
@@ -150,6 +103,19 @@ class Http {
       data: payload,
     });
   }
+
+  customRequest(path, method, responseType) {
+    return this.client.request({
+      method,
+      url: `${BASE_URL}${path}`,
+      responseType,
+    });
+  }
 }
 
 export default new Http();
+
+// sockets: mock new order notification
+// setInterval(async () => {
+//   await axios.get('https://dev-fooddelivery-socket.jarvis.syberry.net/api/v1/orders/mock-created');
+// }, 10000);

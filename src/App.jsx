@@ -1,32 +1,53 @@
 import React from 'react';
 import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
-import { BrowserRouter } from 'react-router-dom';
-import { ThemeProvider } from '@material-ui/styles';
+import { Router } from 'react-router-dom';
+import { ThemeProvider, withStyles } from '@material-ui/styles';
 import { SnackbarProvider } from 'notistack';
+import { MuiPickersUtilsProvider } from '@material-ui/pickers';
+import MomentUtils from '@date-io/moment';
 
 import { store, persistor } from './reducers/store';
-import theme from './mui-theme';
+import theme, { notistackStyles } from './mui-theme';
 
 import Routes from 'routes/Routes';
 import routes from 'routes';
-import { Notifier } from 'components/common/';
+import { Notifier, Listeners } from 'components/common/';
+import history from './browserHistory';
+import { materialClassesType } from 'types';
 
-function App() {
+function App({ classes }) {
   return (
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
-        <BrowserRouter>
+        <Router history={history}>
           <ThemeProvider theme={theme}>
-            <SnackbarProvider>
-              <Notifier />
-              <Routes routes={routes} />
-            </SnackbarProvider>
+            <MuiPickersUtilsProvider utils={MomentUtils}>
+              <SnackbarProvider
+                anchorOrigin={{
+                  vertical: 'top',
+                  horizontal: 'right',
+                }}
+                classes={{
+                  root: classes.snack,
+                  variantError: classes.error,
+                  variantInfo: classes.info,
+                }}
+              >
+                <Listeners />
+                <Notifier />
+                <Routes routes={routes} />
+              </SnackbarProvider>
+            </MuiPickersUtilsProvider>
           </ThemeProvider>
-        </BrowserRouter>
+        </Router>
       </PersistGate>
     </Provider>
   );
 }
 
-export default App;
+App.propTypes = {
+  classes: materialClassesType.isRequired,
+};
+
+export default withStyles(notistackStyles)(App);

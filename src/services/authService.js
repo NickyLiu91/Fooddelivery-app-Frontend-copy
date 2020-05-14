@@ -1,7 +1,6 @@
-import AuthApi from 'sdk/api/authApi';
 import { store } from 'reducers/store';
-import { loginSuccess, setUser } from 'actions/authActions';
-import { UsersApi } from 'sdk/api';
+import { loginSuccess, setUser, logout as logoutAction } from 'actions/authActions';
+import { UsersApi, AuthApi } from 'sdk/api';
 
 export default class AutService {
   static async login({ email, password }) {
@@ -22,7 +21,7 @@ export default class AutService {
     console.log('response', response);
   }
 
-  static async logout() {
-    await AuthApi.logout();
+  static logout() {
+    store.dispatch(logoutAction());
   }
 }

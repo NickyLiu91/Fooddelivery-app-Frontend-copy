@@ -15,22 +15,27 @@ import {
 } from '@material-ui/core';
 import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
 
-
 import { AuthService, notifyService } from 'services/';
 import { styles } from './Login.styled';
-import { materialClassesType, routerHistoryType } from 'types';
+import { materialClassesType, routerHistoryType, authType } from 'types';
 import ROUTES from 'constants/routes';
-import { defaultRoutes } from 'routes';
+import { getDefaultRoute } from 'routes';
+import { getErrorMessage } from 'sdk/utils';
 
 class Login extends Component {
+  componentDidMount() {
+    const { auth, history } = this.props;
+    if (auth.authenticated) history.replace(getDefaultRoute(auth.user));
+  }
+
   handleSubmit = async (data, { setSubmitting }) => {
     const { email, password } = data;
     try {
       const userData = await AuthService.login({ email, password });
-      this.props.history.push(defaultRoutes[userData.permissions.role]);
+      this.props.history.replace(getDefaultRoute(userData));
     } catch (error) {
-      const { response } = error;
-      notifyService.showError(response && response.data && response.data.message ? response.data.message : 'Unknown error');
+      console.log('[Login] submit error', error);
+      notifyService.showError(getErrorMessage(error));
       setSubmitting(false);
     }
   }
@@ -82,7 +87,7 @@ class Login extends Component {
                     margin="normal"
                     fullWidth
                     id="email"
-                    label="Email Address"
+                    label="Email Address*"
                     name="email"
                     autoComplete="email"
                     error={errors.email && touched.email}
@@ -90,15 +95,13 @@ class Login extends Component {
                     onChange={handleChange}
                     onBlur={handleBlur}
                     helperText={(errors.email && touched.email) && errors.email}
-                    autoFocus
                   />
                   <TextField
                     variant="outlined"
                     margin="normal"
-                    required
                     fullWidth
                     name="password"
-                    label="Password"
+                    label="Password*"
                     error={errors.password && touched.password}
                     value={values.password}
                     onChange={handleChange}
@@ -141,6 +144,12 @@ class Login extends Component {
 Login.propTypes = {
   classes: materialClassesType.isRequired,
   history: routerHistoryType.isRequired,
+  auth: authType.isRequired,
 };
 
-export default connect(null, null)(withStyles(styles)(Login));
+const mapStateToProps = state => ({
+  auth: state.auth,
+});
+
+
+export default connect(mapStateToProps, null)(withStyles(styles)(Login));

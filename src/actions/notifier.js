@@ -4,7 +4,6 @@ import { ENQUEUE_SNACKBAR, CLOSE_SNACKBAR, REMOVE_SNACKBAR } from 'constants/act
 import { store } from 'reducers/store';
 import Clear from '@material-ui/icons/Clear';
 
-
 export const enqueueSnackbar = notification => {
   const key = notification.options && notification.options.key;
 
@@ -43,3 +42,23 @@ export const notify = ({ message, variant }) => {
     },
   }));
 };
+
+export const notifyNew = (notifyKey, message) => {
+  store.dispatch(enqueueSnackbar({
+    message,
+    options: {
+      key: notifyKey,
+      variant: 'warning',
+      persist: true,
+      preventDuplicate: true,
+      action: key => (
+        <React.Fragment>
+          <IconButton color="inherit" onClick={() => store.dispatch(closeSnackbar(key))}>
+            <Clear />
+          </IconButton>
+        </React.Fragment>
+      ),
+    },
+  }));
+};
+

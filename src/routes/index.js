@@ -7,14 +7,38 @@ import {
   ResetPassword,
   ConfirmPassword,
   EditUser,
+  Hours,
+  RestaurantsList,
+  RestaurantProfile,
+  TermsAndConditions,
+  Orders,
+  ChangePassword,
+  Item,
+  EditModifier,
+  EditSchedules,
+  Menu,
+  EditLabels,
+  Boundaries,
+  PromotionsList,
+  EditPromotion,
+  Settings,
+  Reviews,
+  Reports,
+  Messages,
+  PublicTerms,
 } from 'components/';
+import AccessDenied from 'pages/noAccessPages/AccessDenied';
+import NotFound from 'pages/noAccessPages/NotFound';
 
-export const defaultRoutes = {
-  // TODO: change to restaurant list when it will be ready
-  // [USER_ROLES.ROOT]: ROUTES.RESTAURANTS_LIST,
-  [USER_ROLES.ROOT]: ROUTES.USERS_LIST,
-  [USER_ROLES.ADMIN]: ROUTES.RESTAURANTS_DASHBOARD,
-  [USER_ROLES.MANAGER]: ROUTES.MANAGE_ORDERS,
+export const DEFAULT_ROUTES = {
+  [USER_ROLES.ROOT]: ROUTES.RESTAURANTS,
+  [USER_ROLES.MANAGER]: ROUTES.ORDERS,
+};
+
+export const getDefaultRoute = user => {
+  if (!user || !user.role) return ROUTES.LOGIN;
+  if (user.role === USER_ROLES.ADMIN) return `${ROUTES.RESTAURANTS}/${user.restaurant.id}/edit`;
+  return DEFAULT_ROUTES[user.role];
 };
 
 const routes = [
@@ -40,10 +64,10 @@ const routes = [
     isProtected: false,
   },
   {
-    path: ROUTES.RESTAURANTS_LIST,
+    path: ROUTES.RESTAURANTS,
     exact: true,
     name: 'Restaurants List',
-    component: Login,
+    component: RestaurantsList,
     permissions: [USER_ROLES.ROOT],
   },
   {
@@ -54,10 +78,17 @@ const routes = [
     permissions: [USER_ROLES.ROOT, USER_ROLES.ADMIN],
   },
   {
-    path: ROUTES.MANAGE_ORDERS,
-    exact: true,
+    path: ROUTES.ORDERS,
+    exact: false,
     name: 'Manage orders',
-    component: Login,
+    component: Orders,
+    permissions: [USER_ROLES.ROOT, USER_ROLES.ADMIN, USER_ROLES.MANAGER],
+  },
+  {
+    path: `${ROUTES.MESSAGES}/:id?`,
+    exact: false,
+    name: 'Messages',
+    component: Messages,
     permissions: [USER_ROLES.ROOT, USER_ROLES.ADMIN, USER_ROLES.MANAGER],
   },
   {
@@ -82,10 +113,183 @@ const routes = [
     permissions: [USER_ROLES.ROOT, USER_ROLES.ADMIN],
   },
   {
+    path: ROUTES.EDIT_PROFILE,
+    exact: true,
+    name: 'Edit Profile',
+    component: EditUser,
+    permissions: [USER_ROLES.ROOT, USER_ROLES.ADMIN, USER_ROLES.MANAGER],
+  },
+  {
+    path: `${ROUTES.MODIFIERS}/add`,
+    exact: true,
+    name: 'Add modifier',
+    component: EditModifier,
+    permissions: [USER_ROLES.ROOT, USER_ROLES.ADMIN],
+  },
+  {
+    path: `${ROUTES.MODIFIERS}/:id/edit`,
+    exact: true,
+    name: 'Edit modifier',
+    component: EditModifier,
+    permissions: [USER_ROLES.ROOT, USER_ROLES.ADMIN],
+  },
+  {
+    path: ROUTES.CHANGE_PASSWORD,
+    exact: true,
+    name: 'Change Password',
+    component: ChangePassword,
+    permissions: [USER_ROLES.ROOT, USER_ROLES.ADMIN, USER_ROLES.MANAGER],
+  },
+  {
+    path: `${ROUTES.HOURS}`,
+    exact: true,
+    name: 'Hours',
+    component: Hours,
+    permissions: [USER_ROLES.ROOT, USER_ROLES.ADMIN],
+  },
+  {
+    path: `${ROUTES.RESTAURANTS}/:id/edit`,
+    exact: false,
+    name: 'Edit Restaurant',
+    component: RestaurantProfile,
+    permissions: [USER_ROLES.ROOT, USER_ROLES.ADMIN],
+  },
+  {
+    path: `${ROUTES.RESTAURANTS}/add`,
+    exact: true,
+    name: 'Add Restaurant',
+    component: RestaurantProfile,
+    permissions: [USER_ROLES.ROOT],
+  },
+  {
+    path: ROUTES.EDIT_TERMS_AND_CONDITIONS,
+    exact: true,
+    name: 'Edit Terms and Conditions',
+    component: TermsAndConditions,
+    permissions: [USER_ROLES.ROOT, USER_ROLES.ADMIN],
+  },
+  {
+    path: ROUTES.ACCESS_DENIED,
+    exact: true,
+    name: 'Access Denied',
+    component: AccessDenied,
+    isProtected: false,
+  },
+  {
+    path: ROUTES.NOT_FOUND,
+    exact: true,
+    name: 'Not Found',
+    component: NotFound,
+  },
+  {
+    path: '/section/:sectionId/item/:itemId/edit',
+    exact: true,
+    name: 'Item',
+    component: Item,
+    permissions: [USER_ROLES.ROOT, USER_ROLES.ADMIN],
+  },
+  {
+    path: `${ROUTES.ITEM}/add`,
+    exact: true,
+    name: 'Item',
+    component: Item,
+    permissions: [USER_ROLES.ROOT, USER_ROLES.ADMIN],
+  },
+  {
+    path: `${ROUTES.MENU_SCHEDULE}/:id/edit`,
+    exact: false,
+    name: 'Edit Schedules',
+    component: EditSchedules,
+    permissions: [USER_ROLES.ROOT, USER_ROLES.ADMIN],
+  },
+  {
+    path: `${ROUTES.MENU_SCHEDULE}/add`,
+    exact: false,
+    name: 'Add Schedules',
+    component: EditSchedules,
+    permissions: [USER_ROLES.ROOT, USER_ROLES.ADMIN],
+  },
+  {
+    path: `${ROUTES.MENU_LABELS}/:id/edit`,
+    exact: false,
+    name: 'Edit Labels',
+    component: EditLabels,
+    permissions: [USER_ROLES.ROOT, USER_ROLES.ADMIN],
+  },
+  {
+    path: `${ROUTES.MENU_LABELS}/add`,
+    exact: false,
+    name: 'Add Labels',
+    component: EditLabels,
+    permissions: [USER_ROLES.ROOT, USER_ROLES.ADMIN],
+  },
+  {
+    path: `${ROUTES.MENU}`,
+    exact: false,
+    name: 'Menu',
+    component: Menu,
+    permissions: [USER_ROLES.ROOT, USER_ROLES.ADMIN],
+  },
+  {
+    path: ROUTES.SETTINGS,
+    exact: true,
+    name: 'Settings',
+    component: Settings,
+    permissions: [USER_ROLES.ROOT, USER_ROLES.ADMIN, USER_ROLES.MANAGER],
+  },
+  {
+    path: `${ROUTES.BOUNDARIES}`,
+    name: 'Boundaries',
+    component: Boundaries,
+    permissions: [USER_ROLES.ROOT, USER_ROLES.ADMIN],
+  },
+  {
+    path: `${ROUTES.PROMOTIONS}`,
+    exact: true,
+    name: 'Promotions',
+    component: PromotionsList,
+    permissions: [USER_ROLES.ROOT, USER_ROLES.ADMIN],
+  },
+  {
+    path: `${ROUTES.PROMOTIONS}/add`,
+    exact: true,
+    name: 'Add Promotion',
+    component: EditPromotion,
+    permissions: [USER_ROLES.ROOT, USER_ROLES.ADMIN],
+  },
+  {
+    path: `${ROUTES.PROMOTIONS}/:id/edit`,
+    exact: true,
+    name: 'Edit Promotion',
+    component: EditPromotion,
+    permissions: [USER_ROLES.ROOT, USER_ROLES.ADMIN],
+  },
+  {
+    path: ROUTES.REVIEWS,
+    exact: true,
+    name: 'Reviews',
+    component: Reviews,
+    permissions: [USER_ROLES.ROOT, USER_ROLES.ADMIN],
+  },
+  {
+    path: `${ROUTES.REPORTS}`,
+    exact: false,
+    name: 'Reports',
+    component: Reports,
+    permissions: [USER_ROLES.ROOT, USER_ROLES.ADMIN],
+  },
+  {
+    path: ROUTES.TERMS_AND_CONDITIONS,
+    exact: true,
+    name: 'Terms and Conditions',
+    component: PublicTerms,
+    isProtected: false,
+  },
+  {
     path: '/',
     exact: true,
     name: 'main',
-    component: Login,
+    component: null,
   },
 ];
 

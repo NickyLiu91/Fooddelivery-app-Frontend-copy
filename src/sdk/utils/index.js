@@ -30,3 +30,25 @@ export const updateQueryParams = (params = {}) => {
   });
   return `?${searchParams.toString()}`;
 };
+
+export const getErrorMessage = error => {
+  const message = 'Unknown error';
+  if (!error || !error.response) {
+    return message;
+  } else if (error.response && error.response.data && error.response.data.message) {
+    return error.response.data.message;
+  }
+  return message;
+};
+
+export const getFormErrors = error => {
+  if (!error || !error.response) {
+    return null;
+  } else if (error.response && error.response.data && error.response.data.errors) {
+    return error.response.data.errors;
+  }
+
+  return null;
+}
+
+export const convertToPrice = num => num.toLocaleString('en', { useGrouping: false, minimumFractionDigits: 2 });

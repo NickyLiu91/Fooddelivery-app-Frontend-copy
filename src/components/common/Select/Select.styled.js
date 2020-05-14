@@ -44,7 +44,7 @@ export const useStyles = makeStyles(theme => ({
   },
   paper: {
     position: 'absolute',
-    zIndex: 1,
+    zIndex: 10,
     marginTop: theme.spacing(1),
     left: 0,
     right: 0,
@@ -65,5 +65,9 @@ export const selectStyles = theme => ({
   indicatorsContainer: base => ({
     ...base,
     cursor: 'pointer',
+  }),
+  menuList: base => ({
+    ...base,
+    maxHeight: '260px',
   }),
 });

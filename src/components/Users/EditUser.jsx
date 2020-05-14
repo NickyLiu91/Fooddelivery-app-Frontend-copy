@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { routerMatchType, authType, materialClassesType, routerHistoryType } from 'types';
+import PropTypes from 'prop-types';
+
 import {
   Typography,
   Container,
@@ -8,35 +9,43 @@ import {
   TextField,
   Grid,
   CircularProgress,
+  Paper,
+  Box,
 } from '@material-ui/core';
 import { withStyles } from '@material-ui/styles';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
 
+import { routerMatchType, authType, materialClassesType, routerHistoryType } from 'types';
 import { UsersService, RestaurantsService, notifyService } from 'services';
 import { USER_ROLES } from 'constants/auth';
-import { Select } from 'components/common';
+import { Select, ConfirmLeaving } from 'components/common';
 import { editStyles } from './Users.styled';
 import ROUTES from 'constants/routes';
+import DefaultLayout from 'components/Layouts/DefaultLayout';
+import { setUser as setUserAction } from 'actions/authActions';
 
 const userSelectData = [
   { value: USER_ROLES.ADMIN, label: 'Admin' },
   { value: USER_ROLES.MANAGER, label: 'Manager' },
 ];
 
-const validationSchema = superAdmin => (
+const validationSchema = (superAdmin, editProfile) => (
   Yup.object().shape({
-    email: Yup.string()
+    email: !editProfile ? Yup.string()
       .email()
-      .max(255, 'String must be no longer than 255 symbols')
-      .required('Required'),
+      .max(64, 'Your input is too long. Maximum length of the email is 64 symbols')
+      .required('Required') : null,
     firstName: Yup.string()
-      .max(255, 'String must be no longer than 255 symbols')
+      .min(2, 'Your input is too short, Minimum length of the name is 2 symbols')
+      .max(64, 'Your input is too long. Maximum length of the name is 64 symbols')
       .required('Required'),
     lastName: Yup.string()
-      .max(255, 'String must be no longer than 255 symbols')
+      .min(2, 'Your input is too short, Minimum length of the last name is 2 symbols')
+      .max(64, 'Your input is too long. Maximum length of the last name is 64 symbols')
       .required('Required'),
     restaurant: superAdmin ? Yup.string()
+      .nullable()
       .required('Required') : null,
     role: superAdmin ? Yup.string()
       .required('Required') : null,
@@ -48,6 +57,7 @@ class EditUser extends Component {
     newUser: true,
     userLoading: true,
     superAdmin: false,
+    editProfile: false,
     restaurantsLoading: false,
     restaurants: [],
     user: {
@@ -62,8 +72,20 @@ class EditUser extends Component {
 
   componentDidMount() {
     const { id } = this.props.match.params;
-    const superAdmin = this.props.auth.user.permissions.role === USER_ROLES.ROOT;
-    if (id || id === 0) {
+    const { user } = this.props.auth;
+    const superAdmin = this.props.auth.user.role === USER_ROLES.ROOT;
+    if (this.props.match.path === ROUTES.EDIT_PROFILE) {
+      this.setState({
+        userLoading: false,
+        newUser: false,
+        superAdmin: false,
+        editProfile: true,
+        user: {
+          firstName: user.first_name,
+          lastName: user.last_name,
+        },
+      });
+    } else if (id || id === 0) {
       this.setState({
         newUser: false,
         superAdmin,
@@ -95,7 +117,9 @@ class EditUser extends Component {
         },
       });
     } catch (error) {
-      console.log('error', error);
+      this.setState({ userLoading: false });
+      const { response } = error;
+      notifyService.showError(response && response.data && response.data.message ? response.data.message : 'Unknown error');
     }
   }
 
@@ -111,7 +135,7 @@ class EditUser extends Component {
         restaurantsLoading: false,
         user: {
           ...this.state.user,
-          restaurant: user.restaurantId,
+          restaurant: user.restaurant.id,
         },
       });
     } catch (error) {
@@ -123,23 +147,32 @@ class EditUser extends Component {
 
   handleSubmit = async (data, { setSubmitting }) => {
     const { user } = this.props.auth;
-    console.log('user', user);
-    const { superAdmin, newUser } = this.state;
-    const userData = {
+    const { superAdmin, newUser, editProfile } = this.state;
+    let userData = {
       first_name: data.firstName,
       last_name: data.lastName,
-      email: data.email,
-      role: superAdmin ? data.role : USER_ROLES.MANAGER,
-      restaurant: superAdmin ? data.restaurant : user.restaurantId,
     };
+    if (!editProfile) {
+      userData = {
+        ...userData,
+        email: data.email,
+        role: superAdmin ? data.role : USER_ROLES.MANAGER,
+        restaurant: superAdmin ? data.restaurant : user.restaurant.id,
+      };
+    }
     try {
-      if (newUser) {
+      if (editProfile) {
+        const newUserData = await UsersService.updateProfile(userData);
+        this.props.setUser(newUserData);
+      } else if (newUser) {
         await UsersService.addUser(userData);
       } else {
         await UsersService.updateUser(data.id, userData);
       }
-      notifyService.showSuccess('User successfully saved');
-      this.props.history.push(ROUTES.USERS_LIST);
+      let successMsg = 'Profile is successfully updated.';
+      if (!editProfile) successMsg = `User is successfully ${newUser ? 'saved' : 'updated'}.`;
+      notifyService.showSuccess(successMsg);
+      this.props.history.goBack();
     } catch (error) {
       console.log('[handleSubmit] error', error);
       const { response } = error;
@@ -156,139 +189,171 @@ class EditUser extends Component {
       restaurants,
       restaurantsLoading,
       superAdmin,
+      editProfile,
     } = this.state;
     const { classes, history, auth } = this.props;
+    let headerText = 'Edit Profile';
+    if (!editProfile) headerText = `${newUser ? 'Add' : 'Edit'} User`;
 
     return (
-      <Container className={classes.root}>
-        <Typography variant="h4">
-          { newUser ? 'Add' : 'Edit' } User
-        </Typography>
-        { !userLoading ? (
-          <Formik
-            initialValues={{ ...user, restaurant: auth.user.restaurantId }}
-            onSubmit={this.handleSubmit}
+      <DefaultLayout>
+        <Container>
+          <Grid container justify="space-between">
+            <Typography variant="h4">
+              {headerText}
+            </Typography>
+            {
+              editProfile &&
+              <Button
+                variant="contained"
+                color="primary"
+                className={classes.changePasswordBtn}
+                onClick={() => history.replace(ROUTES.CHANGE_PASSWORD)}
+              >
+                Change password
+              </Button>
+            }
+          </Grid>
+          { !userLoading ? (
+            <Formik
+              initialValues={{ ...user, restaurant: auth.user.restaurant.id }}
+              onSubmit={this.handleSubmit}
 
-            validationSchema={validationSchema(superAdmin)}
-          >
-            {(props) => {
-              const {
-                values,
-                touched,
-                errors,
-                isSubmitting,
-                handleChange,
-                handleBlur,
-                handleSubmit,
-              } = props;
-              return (
-                <form onSubmit={handleSubmit}>
-                  <Grid container spacing={7}>
-                    <Grid item md={6}>
-                      <TextField
-                        label="First Name"
-                        name="firstName"
-                        error={errors.firstName && touched.firstName}
-                        value={values.firstName}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                        helperText={(errors.firstName && touched.firstName) && errors.firstName}
-                        margin="normal"
-                        fullWidth
-                      />
-                    </Grid>
-                    <Grid item md={6}>
-                      <TextField
-                        label="Last Name"
-                        name="lastName"
-                        error={errors.lastName && touched.lastName}
-                        value={values.lastName}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                        helperText={(errors.lastName && touched.lastName) && errors.lastName}
-                        margin="normal"
-                        fullWidth
-                      />
-                    </Grid>
-                  </Grid>
-                  <Grid container spacing={5}>
-                    <Grid item md={6}>
-                      <TextField
-                        error={errors.email && touched.email}
-                        label="Email"
-                        name="email"
-                        value={values.email}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                        helperText={(errors.email && touched.email) && errors.email}
-                        margin="normal"
-                        fullWidth
-                      />
-                    </Grid>
-                    <Grid item md={6}>
-                      { superAdmin &&
-                      <Select
-                        isLoading={restaurantsLoading}
-                        data={restaurants}
-                        error={errors.restaurant && touched.restaurant}
-                        helperText={(errors.restaurant && touched.restaurant) && errors.restaurant}
-                        label="Restaurant"
-                        name="restaurant"
-                        value={values.restaurant}
-                        onBlur={() => { handleBlur({ target: { name: 'restaurant' } }); }}
-                        placeholder="Select Restaurant"
-                        onChange={(val) => { handleChange({ target: { name: 'restaurant', value: val && val.value ? val.value : '' } }); }}
-                      />}
-                    </Grid>
-                  </Grid>
-                  <Grid container spacing={5}>
-                    <Grid item md={6}>
-                      { superAdmin &&
-                      <Select
-                        data={userSelectData}
-                        error={errors.role && touched.role}
-                        helperText={(errors.role && touched.role) && errors.role}
-                        label="Role"
-                        name="role"
-                        value={values.role}
-                        onBlur={() => { handleBlur({ target: { name: 'role' } }); }}
-                        placeholder="Select Role"
-                        onChange={(val) => { handleChange({ target: { name: 'role', value: val && val.value ? val.value : '' } }); }}
-                      />}
-                    </Grid>
-                  </Grid>
-                  <Grid container>
-                    <Button
-                      type="button"
-                      className={classes.formButton}
-                      disabled={isSubmitting}
-                      size="large"
-                      onClick={() => history.push(ROUTES.USERS_LIST)}
-                      variant="contained"
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      type="submit"
-                      size="large"
-                      className={classes.formButton}
-                      disabled={isSubmitting}
-                      variant="contained"
-                      color="primary"
-                    >
-                      { isSubmitting ? <CircularProgress size={24} /> : 'Submit'}
-                    </Button>
-                  </Grid>
-                </form>
-              );
-            }}
-          </Formik>
-        ) : (
-          <div className={classes.progressContainer}>
-            <CircularProgress />
-          </div>
-        )}
-      </Container>
+              validationSchema={validationSchema(superAdmin, editProfile)}
+            >
+              {(props) => {
+                const {
+                  values,
+                  touched,
+                  errors,
+                  isSubmitting,
+                  handleChange,
+                  handleBlur,
+                  handleSubmit,
+                  dirty,
+                } = props;
+                return (
+                  <Box mt={2}>
+                    <Paper>
+                      <form onSubmit={handleSubmit}>
+                        <Grid container justify="space-around">
+                          <Grid item md={5}>
+                            <TextField
+                              label="First Name*"
+                              name="firstName"
+                              error={errors.firstName && touched.firstName}
+                              value={values.firstName}
+                              onChange={handleChange}
+                              onBlur={handleBlur}
+                              helperText={
+                                (errors.firstName && touched.firstName)
+                                && errors.firstName
+                              }
+                              margin="normal"
+                              fullWidth
+                            />
+                          </Grid>
+                          <Grid item md={5}>
+                            <TextField
+                              label="Last Name*"
+                              name="lastName"
+                              error={errors.lastName && touched.lastName}
+                              value={values.lastName}
+                              onChange={handleChange}
+                              onBlur={handleBlur}
+                              helperText={(errors.lastName && touched.lastName) && errors.lastName}
+                              margin="normal"
+                              fullWidth
+                            />
+                          </Grid>
+                        </Grid>
+                        { !editProfile &&
+                        <React.Fragment>
+                          <Grid container justify="space-around">
+                            <Grid item md={5}>
+                              <TextField
+                                error={errors.email && touched.email}
+                                label="Email*"
+                                name="email"
+                                value={values.email}
+                                onChange={handleChange}
+                                onBlur={handleBlur}
+                                helperText={(errors.email && touched.email) && errors.email}
+                                margin="normal"
+                                fullWidth
+                              />
+                            </Grid>
+                            <Grid item md={5}>
+                              { superAdmin &&
+                              <Select
+                                isLoading={restaurantsLoading}
+                                data={restaurants}
+                                error={errors.restaurant && touched.restaurant}
+                                helperText={
+                                  (errors.restaurant && touched.restaurant) && errors.restaurant
+                                }
+                                label="Restaurant*"
+                                name="restaurant"
+                                value={values.restaurant}
+                                onBlur={() => { handleBlur({ target: { name: 'restaurant' } }); }}
+                                placeholder="Select Restaurant"
+                                onChange={(val) => { handleChange({ target: { name: 'restaurant', value: val && val.value ? val.value : '' } }); }}
+                              />}
+                            </Grid>
+                          </Grid>
+                          <Grid container justify="space-around">
+                            <Grid item md={5}>
+                              { superAdmin &&
+                              <Select
+                                data={userSelectData}
+                                error={errors.role && touched.role}
+                                helperText={(errors.role && touched.role) && errors.role}
+                                label="Role*"
+                                name="role"
+                                value={values.role}
+                                onBlur={() => { handleBlur({ target: { name: 'role' } }); }}
+                                placeholder="Select Role"
+                                onChange={(val) => { handleChange({ target: { name: 'role', value: val && val.value ? val.value : '' } }); }}
+                              />}
+                            </Grid>
+                            <Grid item md={5} />
+                          </Grid>
+                        </React.Fragment>
+                        }
+                        <Grid container>
+                          <Button
+                            type="button"
+                            className={classes.formButton}
+                            disabled={isSubmitting}
+                            onClick={() => history.goBack()}
+                            variant="contained"
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            type="submit"
+                            className={classes.formButton}
+                            disabled={isSubmitting}
+                            variant="contained"
+                            color="primary"
+                          >
+                            { isSubmitting ? <CircularProgress size={24} /> : 'Submit'}
+                          </Button>
+                          <ConfirmLeaving active={dirty && !isSubmitting} />
+                        </Grid>
+                      </form>
+                    </Paper>
+                  </Box>
+                );
+              }}
+            </Formik>
+          ) : (
+            <div className={classes.progressContainer}>
+              <CircularProgress />
+            </div>
+          )}
+        </Container>
+      </DefaultLayout>
     );
   }
 }
@@ -298,10 +363,15 @@ EditUser.propTypes = {
   auth: authType.isRequired,
   classes: materialClassesType.isRequired,
   history: routerHistoryType.isRequired,
+  setUser: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = state => ({
   auth: state.auth,
 });
 
-export default connect(mapStateToProps)(withStyles(editStyles)(EditUser));
+const mapDispatchToProps = dispatch => ({
+  setUser: user => dispatch(setUserAction(user)),
+});
+
+export default connect(mapStateToProps, mapDispatchToProps)(withStyles(editStyles)(EditUser));

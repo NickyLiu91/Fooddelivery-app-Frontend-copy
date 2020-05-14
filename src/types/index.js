@@ -45,8 +45,19 @@ export const authType = shape({
     phone: string,
     firstName: string,
     lastName: string,
-    permissions: shape({
-      role: string,
+    order_sound: number,
+    message_sound: number,
+    permission: string,
+    restaurant: shape({
+      id: number,
+      name: string,
+      address: shape({
+        location: shape({
+          lat: number,
+          lng: number,
+        }),
+        timezone_id: string,
+      }),
     }),
   }),
 });

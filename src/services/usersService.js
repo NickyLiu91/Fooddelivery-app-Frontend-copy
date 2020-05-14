@@ -7,7 +7,7 @@ export class UsersService {
   }
 
   static async getUsersForRestaurant(restaurantId, sortData) {
-    const { data } = await UsersApi.getUsersForRestaurant(restaurantId, sortData);
+    const { data } = await UsersApi.getListForRestaurant(restaurantId, sortData);
     return data;
   }
 
@@ -22,6 +22,16 @@ export class UsersService {
 
   static async updateUser(id, data) {
     await UsersApi.update(id, data);
+  }
+
+  static async updateProfile(data) {
+    const { data: response } = await UsersApi.updateProfile(data);
+    return response;
+  }
+
+  static async updateSettings(id, data) {
+    const { data: response } = await UsersApi.updateSettings(id, data);
+    return response;
   }
 
   static async deleteUser(id) {

@@ -19,6 +19,7 @@ export default function Select(props) {
     isClearable,
     isSearchable,
     isMulti,
+    optionValue,
     ...rest
   } = props;
 
@@ -27,8 +28,8 @@ export default function Select(props) {
   const styles = selectStyles(theme);
 
   const cleanValue =
-    typeof ((value === 'string' && value.length) || value === 'number') && !isMulti
-      ? data.find(option => option.value === value)
+    ((typeof value === 'string' && value.length) || typeof value === 'number') && !isMulti
+      ? data.find(option => optionValue ? option[optionValue] === value : option.value === value)
       : value;
 
   return (
@@ -53,6 +54,7 @@ export default function Select(props) {
           isLoading={isLoading}
           isClearable={isClearable}
           isMulti={isMulti}
+          // menuIsOpen
           isSearchable={isSearchable}
           {...rest}
         />
@@ -68,8 +70,8 @@ Select.propTypes = {
     value: PropTypes.oneOfType([
       PropTypes.string,
       PropTypes.number,
-    ]).isRequired,
-    label: PropTypes.string.isRequired,
+    ]),
+    label: PropTypes.string,
   })).isRequired,
   isClearable: PropTypes.bool,
   placeholder: PropTypes.string.isRequired,
@@ -77,11 +79,13 @@ Select.propTypes = {
   onChange: PropTypes.func.isRequired,
   isSearchable: PropTypes.bool,
   value: PropTypes.any,
+  optionValue: PropTypes.string,
 };
 
 Select.defaultProps = {
-  isClearable: true,
+  isClearable: false,
   isMulti: false,
   isSearchable: true,
   isLoading: false,
+  optionValue: null,
 };

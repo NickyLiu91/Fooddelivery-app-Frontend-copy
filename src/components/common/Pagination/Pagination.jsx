@@ -45,7 +45,7 @@ function Pagination(props) {
 
   return (
     <TablePagination
-      rowsPerPageOptions={[5, 10, 25]}
+      rowsPerPageOptions={[5, 10, 25, 40]}
       component="div"
       count={totalRows}
       rowsPerPage={rowsPerPage}

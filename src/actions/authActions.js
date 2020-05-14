@@ -14,7 +14,7 @@ export const logout = () => ({
   type: LOGOUT,
 });
 
-export const setRestaurant = (id) => ({
+export const setRestaurant = (restaurant) => ({
   type: SET_RESTAURANT,
-  payload: { id },
+  payload: restaurant,
 });
