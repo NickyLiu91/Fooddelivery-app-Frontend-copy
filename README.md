@@ -69,3 +69,4 @@ Redux store is partially persisted in local storage. To prevent collisions and e
 
 Migrations config file: `./src/reducers/storeMigrations.js`
 # Fooddelivery-app-Frontend-copy
+# Fooddelivery-app-Frontend-copy
